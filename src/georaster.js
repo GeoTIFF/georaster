@@ -1,20 +1,13 @@
 'use strict';
 
-let GeoTIFF = require("geotiff");
-
-/*
-    It's weird, but we're putting the web worker script text
-    in this file, because it'll be hard to figure out how to load
-    the text with webpacking.
-*/
 let web_worker_script = `
 
-    // have to use verion built ourselves bc version on NPM doesn't include web worker stuff
-    /*
-        need to get string of node module and then add to front of string
-    */
+    // this is a bit of a hack to trick geotiff to work with web worker
+    window = self;
+
     try {
-        importScripts("${window.location.origin}/js/geotiff.browserify.min.js");
+        /* Need to find a way to do this with webpack */
+        importScripts("https://unpkg.com/geotiff@0.4.1/dist/geotiff.browserify.min.js");
     } catch (error) {
         console.error(error);
     }
