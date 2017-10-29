@@ -57,3 +57,10 @@ typings/
 # dotenv environment variables file
 .env
 
+
+# swap files
+*.swo
+*.swp
+
+# backup files
+*.bak
