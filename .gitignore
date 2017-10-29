@@ -59,4 +59,8 @@ typings/
 
 
 # swap files
+*.swo
 *.swp
+
+# backup files
+*.bak
