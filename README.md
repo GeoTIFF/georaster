@@ -1,7 +1,7 @@
 # georaster
 Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface
 
-# usage
+# usage on front-end
 ```
 let parse_georaster = require("georaster");
 fetch(url)
@@ -10,7 +10,17 @@ fetch(url)
   .then(georaster => {
       console.log("georaster:", georaster);
   });
-  ```
+```
+
+# usage on back-end
+```
+let parse_georaster = require("georaster");
+fs.readFile("data/GeogToWGS84GeoKey5.tif", (error, data) => {
+    parse_georaster(data).then(georaster => {
+      console.log("georaster:", georaster);
+    })
+});
+```
   
   # properties
   | name | description |

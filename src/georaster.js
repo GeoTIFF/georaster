@@ -25,16 +25,12 @@ let parse_data = (data) => {
             result.width = image.getWidth();
 
             // https://www.awaresystems.be/imaging/tiff/tifftags/modeltiepointtag.html
-            let [i, j, k, x, y, z] = fileDirectory.ModelTiepoint;
-
-            result.xmin = x;
-            result.ymax = y;
+            result.xmin = fileDirectory.ModelTiepoint[3];
+            result.ymax = fileDirectory.ModelTiepoint[4];
 
             // https://www.awaresystems.be/imaging/tiff/tifftags/modelpixelscaletag.html
-            let [ScaleX, ScaleY, ScaleZ] = fileDirectory.ModelPixelScale;
-
-            result.pixelHeight = ScaleY;
-            result.pixelWidth = ScaleX;
+            result.pixelHeight = fileDirectory.ModelPixelScale[1];
+            result.pixelWidth = fileDirectory.ModelPixelScale[0];
 
             result.xmax = result.xmin + result.width * result.pixelWidth;
             result.ymin = result.ymax - result.height * result.pixelHeight;
@@ -99,10 +95,11 @@ let web_worker_script = `
     }
 
     onmessage = e => {
-        console.error("inside worker on message started with", e); 
+        //console.error("inside worker on message started with", e); 
         let data = e.data;
         let result = parse_data(data);
         postMessage(result);
+        close();
     }
 `;
 
