@@ -5,7 +5,7 @@
   "main": "dist/georaster_es2015.js",
   "scripts": {
     "babel": "babel --presets es2015 src/georaster.js -o dist/georaster_es2015.js",
-    "test": "./node_modules/.bin/mocha --reporter spec ",
+    "test": "./node_modules/.bin/mocha --reporter spec",
     "jsdoc": "jsdoc packages -r -d docs",
     "start": "node test-app.js"
   },

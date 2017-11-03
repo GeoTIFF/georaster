@@ -60,7 +60,11 @@ typings/
 
 # swap files
 *.swo
+*.swn
 *.swp
 
 # backup files
 *.bak
+
+# lock files
+package-lock.json
