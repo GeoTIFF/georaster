@@ -31,6 +31,7 @@ fs.readFile("data/GeogToWGS84GeoKey5.tif", (error, data) => {
   | no_data_value | no data value |
   | pixelWidth | width of pixel in dimension of coordinate reference system |
   | pixelHeight | height of pixel in dimension of coordinate reference system |
+  | projection | equal to EPSG code, like 4326 |
   | values | two dimensional array of pixel values |
   | width | number of pixels wide raster is |
   | xmax | xmax in crs, which is often in longitude |

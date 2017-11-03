@@ -21,6 +21,8 @@ let parse_data = (data) => {
 
             let fileDirectory = image.fileDirectory;
 
+            result.projection = image.getGeoKeys().GeographicTypeGeoKey;
+
             result.height = image.getHeight();
             result.width = image.getWidth();
 

@@ -26,6 +26,8 @@ var parse_data = function parse_data(data) {
 
             var fileDirectory = image.fileDirectory;
 
+            result.projection = image.getGeoKeys().GeographicTypeGeoKey;
+
             result.height = image.getHeight();
             result.width = image.getWidth();
 
