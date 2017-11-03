@@ -13,7 +13,8 @@ describe('Parsing Rasters', function() {
                 try {
                     expect(georaster.number_of_rasters).to.equal(1);
                     expect(georaster.projection).to.equal(32767);
-                    expect(georaster.values[0]).to.have.lengthOf(10201);
+                    expect(georaster.values[0]).to.have.lengthOf(georaster.height);
+                    expect(georaster.values[0][0]).to.have.lengthOf(georaster.width);
                     done();
                 } catch (error) {
                     console.error("error:", error);

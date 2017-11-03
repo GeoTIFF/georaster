@@ -9,7 +9,7 @@ let parse_data = (data) => {
 
         let result = {};
 
-        let no_data_value;
+        let height, no_data_value, width;
 
         if (data.raster_type === "geotiff") {
 
@@ -23,8 +23,8 @@ let parse_data = (data) => {
 
             result.projection = image.getGeoKeys().GeographicTypeGeoKey;
 
-            result.height = image.getHeight();
-            result.width = image.getWidth();
+            result.height = height = image.getHeight();
+            result.width = width = image.getWidth();
 
             // https://www.awaresystems.be/imaging/tiff/tifftags/modeltiepointtag.html
             result.xmin = fileDirectory.ModelTiepoint[3];
@@ -34,16 +34,23 @@ let parse_data = (data) => {
             result.pixelHeight = fileDirectory.ModelPixelScale[1];
             result.pixelWidth = fileDirectory.ModelPixelScale[0];
 
-            result.xmax = result.xmin + result.width * result.pixelWidth;
-            result.ymin = result.ymax - result.height * result.pixelHeight;
+            result.xmax = result.xmin + width * result.pixelWidth;
+            result.ymin = result.ymax - height * result.pixelHeight;
 
             result.no_data_value = no_data_value = fileDirectory.GDAL_NODATA ? parseFloat(fileDirectory.GDAL_NODATA) : null;
             //console.log("no_data_value:", no_data_value);
 
             result.number_of_rasters = fileDirectory.SamplesPerPixel;
 
-            result.values = image.readRasters();
-
+            result.values = image.readRasters().map(values_in_one_dimension => {
+                let values_in_two_dimensions = [];
+                for (let y = 0; y < height; y++) {
+                    let start = y * width;
+                    let end = start + width;
+                    values_in_two_dimensions.push(values_in_one_dimension.slice(start, end));
+                }
+                return values_in_two_dimensions;
+            });
         }
 
         result.maxs = [];
@@ -53,18 +60,24 @@ let parse_data = (data) => {
         let max; let min;
 
         //console.log("starting to get min, max and ranges");
-        for (let r = 0; r < result.number_of_rasters; r++) {
+        for (let raster_index = 0; raster_index < result.number_of_rasters; raster_index++) {
 
-            let values = result.values[r];
-            let number_of_values = values.length;
+            let rows = result.values[raster_index];
 
-            for (let v = 1; v < number_of_values; v++) {
-                let value = values[v];
-                if (value != no_data_value) {
-                    if (typeof min === "undefined" || value < min) min = value;
-                    else if (typeof max === "undefined" || value > max) max = value;
+            for (let row_index = 0; row_index < height; row_index++) {
+
+                let row = rows[row_index];
+
+                for (let column_index = 0; column_index < width; column_index++) {
+
+                    let value = row[column_index];
+                    if (value != no_data_value) {
+                        if (typeof min === "undefined" || value < min) min = value;
+                        else if (typeof max === "undefined" || value > max) max = value;
+                    }
                 }
             }
+
             result.maxs.push(max);
             result.mins.push(min);
             result.ranges.push(max - min);
