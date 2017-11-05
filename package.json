@@ -1,6 +1,6 @@
 {
   "name": "georaster",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
   "main": "dist/georaster_es2015.js",
   "scripts": {
