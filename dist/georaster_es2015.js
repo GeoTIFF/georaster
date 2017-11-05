@@ -12,9 +12,13 @@ var parse_data = function parse_data(data) {
 
     try {
 
-        var result = {};
+        var result = {
+            _arrayBuffer: data.arrayBuffer
+        };
 
-        var no_data_value = void 0;
+        var height = void 0,
+            no_data_value = void 0,
+            width = void 0;
 
         if (data.raster_type === "geotiff") {
 
@@ -28,8 +32,8 @@ var parse_data = function parse_data(data) {
 
             result.projection = image.getGeoKeys().GeographicTypeGeoKey;
 
-            result.height = image.getHeight();
-            result.width = image.getWidth();
+            result.height = height = image.getHeight();
+            result.width = width = image.getWidth();
 
             // https://www.awaresystems.be/imaging/tiff/tifftags/modeltiepointtag.html
             result.xmin = fileDirectory.ModelTiepoint[3];
@@ -39,15 +43,24 @@ var parse_data = function parse_data(data) {
             result.pixelHeight = fileDirectory.ModelPixelScale[1];
             result.pixelWidth = fileDirectory.ModelPixelScale[0];
 
-            result.xmax = result.xmin + result.width * result.pixelWidth;
-            result.ymin = result.ymax - result.height * result.pixelHeight;
+            result.xmax = result.xmin + width * result.pixelWidth;
+            result.ymin = result.ymax - height * result.pixelHeight;
 
             result.no_data_value = no_data_value = fileDirectory.GDAL_NODATA ? parseFloat(fileDirectory.GDAL_NODATA) : null;
             //console.log("no_data_value:", no_data_value);
 
             result.number_of_rasters = fileDirectory.SamplesPerPixel;
 
-            result.values = image.readRasters();
+            result.values = image.readRasters().map(function (values_in_one_dimension) {
+                var values_in_two_dimensions = [];
+                for (var y = 0; y < height; y++) {
+                    var start = y * width;
+                    var end = start + width;
+                    values_in_two_dimensions.push(values_in_one_dimension.slice(start, end));
+                }
+                //console.log("values_in_two_dimensions:", values_in_two_dimensions);
+                return values_in_two_dimensions;
+            });
         }
 
         result.maxs = [];
@@ -57,17 +70,23 @@ var parse_data = function parse_data(data) {
         var max = void 0;var min = void 0;
 
         //console.log("starting to get min, max and ranges");
-        for (var r = 0; r < result.number_of_rasters; r++) {
+        for (var raster_index = 0; raster_index < result.number_of_rasters; raster_index++) {
 
-            var values = result.values[r];
-            var number_of_values = values.length;
+            var rows = result.values[raster_index];
 
-            for (var v = 1; v < number_of_values; v++) {
-                var value = values[v];
-                if (value != no_data_value) {
-                    if (typeof min === "undefined" || value < min) min = value;else if (typeof max === "undefined" || value > max) max = value;
+            for (var row_index = 0; row_index < height; row_index++) {
+
+                var row = rows[row_index];
+
+                for (var column_index = 0; column_index < width; column_index++) {
+
+                    var value = row[column_index];
+                    if (value != no_data_value) {
+                        if (typeof min === "undefined" || value < min) min = value;else if (typeof max === "undefined" || value > max) max = value;
+                    }
                 }
             }
+
             result.maxs.push(max);
             result.mins.push(min);
             result.ranges.push(max - min);
@@ -80,7 +99,7 @@ var parse_data = function parse_data(data) {
     }
 };
 
-var web_worker_script = "\n\n    // this is a bit of a hack to trick geotiff to work with web worker\n    let window = self;\n\n    let parse_data = " + parse_data.toString() + ";\n    //console.log(\"inside web worker, parse_data is\", parse_data);\n\n    try {\n        /* Need to find a way to do this with webpack */\n        importScripts(\"https://unpkg.com/geotiff@0.4.1/dist/geotiff.browserify.min.js\");\n    } catch (error) {\n        console.error(error);\n    }\n\n    onmessage = e => {\n        //console.error(\"inside worker on message started with\", e); \n        let data = e.data;\n        let result = parse_data(data);\n        postMessage(result);\n        close();\n    }\n";
+var web_worker_script = "\n\n    // this is a bit of a hack to trick geotiff to work with web worker\n    let window = self;\n\n    let parse_data = " + parse_data.toString() + ";\n    //console.log(\"inside web worker, parse_data is\", parse_data);\n\n    try {\n        /* Need to find a way to do this with webpack */\n        importScripts(\"https://unpkg.com/geotiff@0.4.1/dist/geotiff.browserify.min.js\");\n    } catch (error) {\n        console.error(error);\n    }\n\n    onmessage = e => {\n        //console.error(\"inside worker on message started with\", e); \n        let data = e.data;\n        let result = parse_data(data);\n        console.log(\"posting from web wroker:\", result);\n        postMessage(result, [result._arrayBuffer]);\n        close();\n    }\n";
 
 var GeoRaster = function () {
     function GeoRaster(arrayBuffer) {
@@ -123,7 +142,7 @@ var GeoRaster = function () {
                         var worker = new Worker(url);
                         //console.log("worker:", worker);
                         worker.onmessage = function (e) {
-                            //console.log("main thread received message:", e);
+                            console.log("main thread received message:", e);
                             var data = e.data;
                             for (var key in data) {
                                 _this[key] = data[key];

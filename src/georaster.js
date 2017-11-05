@@ -7,7 +7,9 @@ let parse_data = (data) => {
 
     try {
 
-        let result = {};
+        let result = {
+            _arrayBuffer: data.arrayBuffer
+        };
 
         let height, no_data_value, width;
 
@@ -49,6 +51,7 @@ let parse_data = (data) => {
                     let end = start + width;
                     values_in_two_dimensions.push(values_in_one_dimension.slice(start, end));
                 }
+                //console.log("values_in_two_dimensions:", values_in_two_dimensions);
                 return values_in_two_dimensions;
             });
         }
@@ -113,7 +116,8 @@ let web_worker_script = `
         //console.error("inside worker on message started with", e); 
         let data = e.data;
         let result = parse_data(data);
-        postMessage(result);
+        console.log("posting from web wroker:", result);
+        postMessage(result, [result._arrayBuffer]);
         close();
     }
 `;
@@ -155,7 +159,7 @@ class GeoRaster {
                     var worker = new Worker(url);
                     //console.log("worker:", worker);
                     worker.onmessage = (e) => {
-                        //console.log("main thread received message:", e);
+                        console.log("main thread received message:", e);
                         let data = e.data;
                         for (let key in data) {
                             this[key] = data[key];
