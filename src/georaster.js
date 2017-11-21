@@ -7,6 +7,8 @@ let parse_data = (data) => {
 
     try {
 
+        let root = typeof window !== "undefined" ? window : typeof self !== "undefined" ? self : null;
+
         let result = {
             _arrayBuffer: data.arrayBuffer
         };
@@ -16,7 +18,7 @@ let parse_data = (data) => {
         if (data.raster_type === "geotiff") {
 
             //console.log("data.raster_type is geotiff");
-            let geotiff = GeoTIFF.parse(data.arrayBuffer);
+            let geotiff = root.GeoTIFF.parse(data.arrayBuffer);
             //console.log("geotiff:", geotiff);
 
             let image = geotiff.getImage();
@@ -90,12 +92,11 @@ let parse_data = (data) => {
 
     } catch (error) {
 
-        console.error("error:", error);
+        console.error("[georaster] error parsing georaster:", error);
 
     }
 
 }
- 
 
 let web_worker_script = `
 

@@ -12,6 +12,8 @@ var parse_data = function parse_data(data) {
 
     try {
 
+        var root = typeof window !== "undefined" ? window : typeof self !== "undefined" ? self : null;
+
         var result = {
             _arrayBuffer: data.arrayBuffer
         };
@@ -23,7 +25,7 @@ var parse_data = function parse_data(data) {
         if (data.raster_type === "geotiff") {
 
             //console.log("data.raster_type is geotiff");
-            var geotiff = GeoTIFF.parse(data.arrayBuffer);
+            var geotiff = root.GeoTIFF.parse(data.arrayBuffer);
             //console.log("geotiff:", geotiff);
 
             var image = geotiff.getImage();
@@ -95,7 +97,7 @@ var parse_data = function parse_data(data) {
         return result;
     } catch (error) {
 
-        console.error("error:", error);
+        console.error("[georaster] error parsing georaster:", error);
     }
 };
 
