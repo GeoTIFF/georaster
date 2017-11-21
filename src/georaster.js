@@ -12,7 +12,7 @@ let parse_data = (data, debug) => {
         if (debug) console.log("\tGeoTIFF:", GeoTIFF);
 
         let parser = typeof GeoTIFF !== "undefined" ? GeoTIFF : typeof window !== "undefined" ? window.GeoTIFF : typeof self !== "undefined" ? self.GeoTIFF : null;
-        //console.log("GeoTIFF:", GeoTIFF);
+        //console.log("parser:", parser);
 
         let result = {
             _arrayBuffer: data.arrayBuffer
