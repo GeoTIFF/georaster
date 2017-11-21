@@ -2,12 +2,17 @@
 
 // import this library in case you don't use the web worker
 let GeoTIFF = require("geotiff");
+console.log("GeoTIFF:", GeoTIFF);
 
-let parse_data = (data) => {
+let parse_data = (data, debug) => {
 
     try {
 
-        let root = typeof window !== "undefined" ? window : typeof self !== "undefined" ? self : null;
+        if (debug) console.log("starting parse_data with", data);
+        if (debug) console.log("\tGeoTIFF:", GeoTIFF);
+
+        let parser = typeof GeoTIFF !== "undefined" ? GeoTIFF : typeof window !== "undefined" ? window.GeoTIFF : typeof self !== "undefined" ? self.GeoTIFF : null;
+        //console.log("GeoTIFF:", GeoTIFF);
 
         let result = {
             _arrayBuffer: data.arrayBuffer
@@ -18,7 +23,7 @@ let parse_data = (data) => {
         if (data.raster_type === "geotiff") {
 
             //console.log("data.raster_type is geotiff");
-            let geotiff = root.GeoTIFF.parse(data.arrayBuffer);
+            let geotiff = parser.parse(data.arrayBuffer);
             //console.log("geotiff:", geotiff);
 
             let image = geotiff.getImage();

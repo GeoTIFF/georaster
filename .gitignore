@@ -68,3 +68,8 @@ typings/
 
 # lock files
 package-lock.json
+
+# swap files
+*.swl
+*.swm
+*.swn

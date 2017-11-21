@@ -7,12 +7,17 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var GeoTIFF = require("geotiff");
+console.log("GeoTIFF:", GeoTIFF);
 
-var parse_data = function parse_data(data) {
+var parse_data = function parse_data(data, debug) {
 
     try {
 
-        var root = typeof window !== "undefined" ? window : typeof self !== "undefined" ? self : null;
+        if (debug) console.log("starting parse_data with", data);
+        if (debug) console.log("\tGeoTIFF:", GeoTIFF);
+
+        var parser = typeof GeoTIFF !== "undefined" ? GeoTIFF : typeof window !== "undefined" ? window.GeoTIFF : typeof self !== "undefined" ? self.GeoTIFF : null;
+        //console.log("GeoTIFF:", GeoTIFF);
 
         var result = {
             _arrayBuffer: data.arrayBuffer
@@ -25,7 +30,7 @@ var parse_data = function parse_data(data) {
         if (data.raster_type === "geotiff") {
 
             //console.log("data.raster_type is geotiff");
-            var geotiff = root.GeoTIFF.parse(data.arrayBuffer);
+            var geotiff = parser.parse(data.arrayBuffer);
             //console.log("geotiff:", geotiff);
 
             var image = geotiff.getImage();
