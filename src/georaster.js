@@ -188,4 +188,17 @@ class GeoRaster {
 
 }
 
-module.exports = (input) => new GeoRaster(input).initialize();
+var parse_georaster = (input) => new GeoRaster(input).initialize();
+
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+    module.exports = parse_georaster;
+}
+
+/*
+    The following code allows you to use GeoRaster without requiring
+*/
+if (typeof window !== "undefined") {
+    window["parse_georaster"] = parse_georaster;
+} else if (typeof self !== "undefined") {
+    self["parse_georaster"] = { parse_georaster: parse_georaster }; // jshint ignore:line
+}

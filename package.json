@@ -5,6 +5,8 @@
   "main": "dist/georaster_es2015.js",
   "scripts": {
     "babel": "babel --presets es2015 src/georaster.js -o dist/georaster_es2015.js",
+    "browserify": "npm run babel && cd dist && browserify georaster_es2015.js -o georaster.browserify.js",
+    "build": "npm run browserify",
     "test": "npm run babel && ./node_modules/.bin/mocha --reporter spec",
     "jsdoc": "jsdoc packages -r -d docs",
     "start": "node test-app.js"
@@ -50,6 +52,7 @@
     "webpack": "^3.5.4"
   },
   "devDependencies": {
+    "browserify": "^14.5.0",
     "jsdoc": "^3.5.5",
     "memory-fs": "^0.4.1",
     "request": "^2.81.0"
