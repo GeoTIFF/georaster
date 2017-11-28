@@ -188,5 +188,5 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 if (typeof window !== "undefined") {
     window["parse_georaster"] = parse_georaster;
 } else if (typeof self !== "undefined") {
-    self["parse_georaster"] = { parse_georaster: parse_georaster }; // jshint ignore:line
+    self["parse_georaster"] = parse_georaster; // jshint ignore:line
 }
