@@ -114,7 +114,6 @@ var GeoRaster = function () {
 
         //console.log("starting GeoRaster.constructor with", arrayBuffer.toString());
 
-
         if (typeof Buffer !== "undefined" && Buffer.isBuffer(arrayBuffer)) {
             arrayBuffer = arrayBuffer.buffer.slice(arrayBuffer.byteOffset, arrayBuffer.byteOffset + arrayBuffer.byteLength);
         }
@@ -175,6 +174,12 @@ var GeoRaster = function () {
 }();
 
 var parse_georaster = function parse_georaster(input) {
+
+    if (input === undefined) {
+        var error_message = "[Georaster.parse_georaster] Error. You passed in undefined to parse_georaster. We can't make a raster out of nothing!";
+        throw Error(error_message);
+    }
+
     return new GeoRaster(input).initialize();
 };
 

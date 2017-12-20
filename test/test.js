@@ -24,3 +24,17 @@ describe('Parsing Rasters', function() {
     });
   });
 });
+
+describe('Checking Error Catching', function() {
+  describe('if you pass in undefined', function() {
+    it('should throw an error', function() {
+        try {
+            parse_georaster(undefined);
+        } catch (error) {
+            let actual_error_message = error.toString();
+            let expected_error_message = 'Error: [Georaster.parse_georaster] Error. You passed in undefined to parse_georaster. We can\'t make a raster out of nothing!';
+            expect(actual_error_message).to.equal(expected_error_message);
+        }
+    });
+  });
+});

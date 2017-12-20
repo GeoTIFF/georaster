@@ -133,7 +133,6 @@ class GeoRaster {
     constructor(arrayBuffer) {
         //console.log("starting GeoRaster.constructor with", arrayBuffer.toString());
 
-
         if (typeof Buffer !== "undefined" && Buffer.isBuffer(arrayBuffer)) {
             arrayBuffer = arrayBuffer.buffer.slice(arrayBuffer.byteOffset, arrayBuffer.byteOffset + arrayBuffer.byteLength);
         }
@@ -188,7 +187,15 @@ class GeoRaster {
 
 }
 
-var parse_georaster = (input) => new GeoRaster(input).initialize();
+var parse_georaster = (input) => {
+
+    if (input === undefined) {
+        let error_message = "[Georaster.parse_georaster] Error. You passed in undefined to parse_georaster. We can't make a raster out of nothing!";
+        throw Error(error_message);
+    }
+
+    return new GeoRaster(input).initialize();
+}
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
     module.exports = parse_georaster;
