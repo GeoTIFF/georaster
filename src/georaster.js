@@ -2,10 +2,6 @@
 
 // import this library in case you don't use the web worker
 let GeoTIFF = require("geotiff");
-console.log("GeoTIFF:", typeof GeoTIFF);
-
-let utif = require("utif");
-console.log("utif:", typeof utif);
 
 let parse_data = (data, debug) => {
 
@@ -14,8 +10,7 @@ let parse_data = (data, debug) => {
 
         if (debug) console.log("starting parse_data with", data);
         if (debug) console.log("\tGeoTIFF:", typeof GeoTIFF);
-        if (debug) console.log("\tutif:", typeof utif);
-        
+
 
         //console.log("parser:", parser);
 
@@ -84,16 +79,8 @@ let parse_data = (data, debug) => {
                     let end = start + width;
                     values_in_two_dimensions.push(values_in_one_dimension.slice(start, end));
                 }
-                //console.log("values_in_two_dimensions:", values_in_two_dimensions);
                 return values_in_two_dimensions;
             });
-        } else if (data.raster_type === "tiff") {
-            console.log("raster type is regular tiff");
-            let parser = typeof utif !== "undefined" ? utif : typeof window !== "undefined" ? window.UTIF : typeof self !== "undefined" ? self.UTIF : null;
-            let ifds = parser.decode(data.arrayBuffer);
-            console.log("ifds:", ifds);
-            let images = parser.decodeImages(data.arrayBuffer, ifds);
-            console.log("images:", images);
         }
 
         result.maxs = [];
