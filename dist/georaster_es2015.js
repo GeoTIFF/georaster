@@ -11,10 +11,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var GeoTIFF = require("geotiff");
-console.log("GeoTIFF:", typeof GeoTIFF === "undefined" ? "undefined" : _typeof(GeoTIFF));
-
-var utif = require("utif");
-console.log("utif:", typeof utif === "undefined" ? "undefined" : _typeof(utif));
 
 var parse_data = function parse_data(data, debug) {
 
@@ -23,7 +19,6 @@ var parse_data = function parse_data(data, debug) {
 
         if (debug) console.log("starting parse_data with", data);
         if (debug) console.log("\tGeoTIFF:", typeof GeoTIFF === "undefined" ? "undefined" : _typeof(GeoTIFF));
-        if (debug) console.log("\tutif:", typeof utif === "undefined" ? "undefined" : _typeof(utif));
 
         //console.log("parser:", parser);
 
@@ -104,16 +99,8 @@ var parse_data = function parse_data(data, debug) {
                     var end = start + width;
                     values_in_two_dimensions.push(values_in_one_dimension.slice(start, end));
                 }
-                //console.log("values_in_two_dimensions:", values_in_two_dimensions);
                 return values_in_two_dimensions;
             });
-        } else if (data.raster_type === "tiff") {
-            console.log("raster type is regular tiff");
-            var _parser = typeof utif !== "undefined" ? utif : typeof window !== "undefined" ? window.UTIF : typeof self !== "undefined" ? self.UTIF : null;
-            var ifds = _parser.decode(data.arrayBuffer);
-            console.log("ifds:", ifds);
-            var images = _parser.decodeImages(data.arrayBuffer, ifds);
-            console.log("images:", images);
         }
 
         result.maxs = [];

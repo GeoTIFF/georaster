@@ -6,19 +6,22 @@
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var GeoTIFF = require("geotiff");
-console.log("GeoTIFF:", GeoTIFF);
 
 var parse_data = function parse_data(data, debug) {
 
     try {
+        debug = true;
 
         if (debug) console.log("starting parse_data with", data);
-        if (debug) console.log("\tGeoTIFF:", GeoTIFF);
+        if (debug) console.log("\tGeoTIFF:", typeof GeoTIFF === "undefined" ? "undefined" : _typeof(GeoTIFF));
 
-        var parser = typeof GeoTIFF !== "undefined" ? GeoTIFF : typeof window !== "undefined" ? window.GeoTIFF : typeof self !== "undefined" ? self.GeoTIFF : null;
         //console.log("parser:", parser);
 
         var result = {
@@ -31,29 +34,60 @@ var parse_data = function parse_data(data, debug) {
 
         if (data.raster_type === "geotiff") {
 
-            //console.log("data.raster_type is geotiff");
+            var parser = typeof GeoTIFF !== "undefined" ? GeoTIFF : typeof window !== "undefined" ? window.GeoTIFF : typeof self !== "undefined" ? self.GeoTIFF : null;
+
+            if (debug) console.log("data.raster_type is geotiff");
             var geotiff = parser.parse(data.arrayBuffer);
-            //console.log("geotiff:", geotiff);
+            if (debug) console.log("geotiff:", geotiff);
 
             var image = geotiff.getImage();
+            if (debug) console.log("image:", image);
 
             var fileDirectory = image.fileDirectory;
 
-            result.projection = image.getGeoKeys().GeographicTypeGeoKey;
+            var geoKeys = image.getGeoKeys();
+
+            if (debug) console.log("geoKeys:", geoKeys);
+            result.projection = geoKeys.GeographicTypeGeoKey;
+            if (debug) console.log("projection:", result.projection);
 
             result.height = height = image.getHeight();
+            if (debug) console.log("result.height:", result.height);
             result.width = width = image.getWidth();
+            if (debug) console.log("result.width:", result.width);
 
-            // https://www.awaresystems.be/imaging/tiff/tifftags/modeltiepointtag.html
-            result.xmin = fileDirectory.ModelTiepoint[3];
-            result.ymax = fileDirectory.ModelTiepoint[4];
+            var _image$getResolution = image.getResolution(),
+                _image$getResolution2 = _slicedToArray(_image$getResolution, 3),
+                resolutionX = _image$getResolution2[0],
+                resolutionY = _image$getResolution2[1],
+                resolutionZ = _image$getResolution2[2];
 
-            // https://www.awaresystems.be/imaging/tiff/tifftags/modelpixelscaletag.html
-            result.pixelHeight = fileDirectory.ModelPixelScale[1];
-            result.pixelWidth = fileDirectory.ModelPixelScale[0];
+            var flippedX = resolutionX < 0;
+            var flippedY = resolutionY < 0;
+            result.pixelHeight = Math.abs(resolutionY);
+            result.pixelWidth = Math.abs(resolutionX);
 
-            result.xmax = result.xmin + width * result.pixelWidth;
-            result.ymin = result.ymax - height * result.pixelHeight;
+            var _image$getOrigin = image.getOrigin(),
+                _image$getOrigin2 = _slicedToArray(_image$getOrigin, 3),
+                originX = _image$getOrigin2[0],
+                originY = _image$getOrigin2[1],
+                originZ = _image$getOrigin2[2];
+
+            if (flippedX) {
+                result.xmax = originX;
+                result.xmin = result.xmax - width * result.pixelWidth;
+            } else {
+                result.xmin = originX;
+                result.xmax = result.xmin + width * result.pixelWidth;
+            }
+
+            if (flippedY) {
+                result.ymin = originY;
+                result.ymax = result.ymin + height * result.pixelHeight;
+            } else {
+                result.ymax = originY;
+                result.ymin = result.ymax - height * result.pixelHeight;
+            }
 
             result.no_data_value = no_data_value = fileDirectory.GDAL_NODATA ? parseFloat(fileDirectory.GDAL_NODATA) : null;
             //console.log("no_data_value:", no_data_value);
@@ -67,7 +101,6 @@ var parse_data = function parse_data(data, debug) {
                     var end = start + width;
                     values_in_two_dimensions.push(values_in_one_dimension.slice(start, end));
                 }
-                //console.log("values_in_two_dimensions:", values_in_two_dimensions);
                 return values_in_two_dimensions;
             });
         }
@@ -111,32 +144,38 @@ var parse_data = function parse_data(data, debug) {
 var web_worker_script = "\n\n    // this is a bit of a hack to trick geotiff to work with web worker\n    let window = self;\n\n    let parse_data = " + parse_data.toString() + ";\n    //console.log(\"inside web worker, parse_data is\", parse_data);\n\n    try {\n        /* Need to find a way to do this with webpack */\n        importScripts(\"https://unpkg.com/geotiff@0.4.1/dist/geotiff.browserify.min.js\");\n    } catch (error) {\n        console.error(error);\n    }\n\n    onmessage = e => {\n        //console.error(\"inside worker on message started with\", e); \n        let data = e.data;\n        let result = parse_data(data);\n        console.log(\"posting from web wroker:\", result);\n        postMessage(result, [result._arrayBuffer]);\n        close();\n    }\n";
 
 var GeoRaster = function () {
-    function GeoRaster(arrayBuffer) {
+    function GeoRaster(arrayBuffer, metadata, debug) {
         _classCallCheck(this, GeoRaster);
 
-        //console.log("starting GeoRaster.constructor with", arrayBuffer.toString());
+        if (debug) console.log("starting GeoRaster.constructor with", arrayBuffer, metadata);
 
         if (typeof Buffer !== "undefined" && Buffer.isBuffer(arrayBuffer)) {
             arrayBuffer = arrayBuffer.buffer.slice(arrayBuffer.byteOffset, arrayBuffer.byteOffset + arrayBuffer.byteLength);
         }
 
-        this.raster_type = "geotiff";
         this._arrayBuffer = arrayBuffer;
         this._web_worker_is_available = typeof window !== "undefined" && window.Worker !== "undefined";
         this._blob_is_available = typeof Blob !== "undefined";
         this._url_is_available = typeof URL !== "undefined";
 
-        //console.log("this after construction:", this);
+        if (metadata) {
+            this.raster_type = "tiff";
+            this._metadata = metadata;
+        } else {
+            this.raster_type = "geotiff";
+        }
+
+        if (debug) console.log("this after construction:", this);
     }
 
     _createClass(GeoRaster, [{
         key: "initialize",
-        value: function initialize() {
+        value: function initialize(debug) {
             var _this = this;
 
             return new Promise(function (resolve, reject) {
-                //console.log("starting GeoRaster.values getter");
-                if (_this.raster_type === "geotiff") {
+                if (debug) console.log("starting GeoRaster.initialize");
+                if (_this.raster_type === "geotiff" || _this.raster_type === "tiff") {
                     if (_this._web_worker_is_available) {
                         var url = void 0;
                         if (_this._blob_is_available) {
@@ -157,12 +196,20 @@ var GeoRaster = function () {
                             }
                             resolve(_this);
                         };
-                        //console.log("about to postMessage");
-                        worker.postMessage({ arrayBuffer: _this._arrayBuffer, raster_type: _this.raster_type }, [_this._arrayBuffer]);
+                        if (debug) console.log("about to postMessage");
+                        worker.postMessage({
+                            arrayBuffer: _this._arrayBuffer,
+                            raster_type: _this.raster_type,
+                            metadata: _this._metadata
+                        }, [_this._arrayBuffer]);
                     } else {
-                        //console.log("web worker is not available");
-                        var result = parse_data({ arrayBuffer: _this._arrayBuffer, raster_type: _this.raster_type });
-                        //console.log("result:", result);
+                        if (debug) console.log("web worker is not available");
+                        var result = parse_data({
+                            arrayBuffer: _this._arrayBuffer,
+                            raster_type: _this.raster_type,
+                            metadata: _this._metadata
+                        });
+                        if (debug) console.log("result:", result);
                         resolve(result);
                     }
                 } else {
@@ -175,14 +222,16 @@ var GeoRaster = function () {
     return GeoRaster;
 }();
 
-var parse_georaster = function parse_georaster(input) {
+var parse_georaster = function parse_georaster(input, metadata, debug) {
+
+    if (debug) console.log("starting parse_georaster with ", input, metadata);
 
     if (input === undefined) {
         var error_message = "[Georaster.parse_georaster] Error. You passed in undefined to parse_georaster. We can't make a raster out of nothing!";
         throw Error(error_message);
     }
 
-    return new GeoRaster(input).initialize();
+    return new GeoRaster(input, metadata, debug).initialize(debug);
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
@@ -199,7 +248,7 @@ if (typeof window !== "undefined") {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3,"geotiff":13}],2:[function(require,module,exports){
+},{"buffer":3,"geotiff":14}],2:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -2031,7 +2080,93 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":2,"ieee754":15}],4:[function(require,module,exports){
+},{"base64-js":2,"ieee754":4}],4:[function(require,module,exports){
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
+
+},{}],5:[function(require,module,exports){
 "use strict";
 
 function AbstractDecoder() {}
@@ -2044,7 +2179,7 @@ AbstractDecoder.prototype = {
 };
 
 module.exports = AbstractDecoder;
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 var AbstractDecoder = require("../abstractdecoder.js");
@@ -2059,7 +2194,7 @@ DeflateDecoder.prototype.decodeBlock = function (buffer) {
 };
 
 module.exports = DeflateDecoder;
-},{"../abstractdecoder.js":4,"pako/lib/inflate":16}],6:[function(require,module,exports){
+},{"../abstractdecoder.js":5,"pako/lib/inflate":17}],7:[function(require,module,exports){
 "use strict";
 
 //var lzwCompress = require("lzwcompress");
@@ -2071,243 +2206,136 @@ var MAX_BITS = 12;
 var CLEAR_CODE = 256; // clear code
 var EOI_CODE = 257; // end of information
 
-function LZW() {
-  this.littleEndian = false;
-  this.position = 0;
-
-  this._makeEntryLookup = false;
-  this.dictionary = [];
-}
-
-LZW.prototype = {
-  constructor: LZW,
-  initDictionary: function initDictionary() {
-    this.dictionary = new Array(258);
-    this.entryLookup = {};
-    this.byteLength = MIN_BITS;
-    for (var i = 0; i <= 257; i++) {
-      // i really feal like i <= 257, but I get strange unknown words that way.
-      this.dictionary[i] = [i];
-      if (this._makeEntryLookup) {
-        this.entryLookup[i] = i;
-      }
-    }
-  },
-
-  decompress: function decompress(input) {
-    this._makeEntryLookup = false; // for speed
-    this.initDictionary();
-    this.position = 0;
-    this.result = [];
-    if (!input.buffer) {
-      input = new Uint8Array(input);
-    }
-    var mydataview = new DataView(input.buffer);
-    var code = this.getNext(mydataview);
-    var oldCode;
-    while (code !== EOI_CODE) {
-      if (code === CLEAR_CODE) {
-        this.initDictionary();
-        code = this.getNext(mydataview);
-        while (code === CLEAR_CODE) {
-          code = this.getNext(mydataview);
-        }
-        if (code > CLEAR_CODE) {
-          throw 'corrupted code at scanline ' + code;
-        }
-        if (code === EOI_CODE) {
-          break;
-        } else {
-          var val = this.dictionary[code];
-          this.appendArray(this.result, val);
-          oldCode = code;
-        }
-      } else {
-        if (this.dictionary[code] !== undefined) {
-          var _val = this.dictionary[code];
-          this.appendArray(this.result, _val);
-          var newVal = this.dictionary[oldCode].concat(this.dictionary[code][0]);
-          this.addToDictionary(newVal);
-          oldCode = code;
-        } else {
-          var oldVal = this.dictionary[oldCode];
-          if (!oldVal) {
-            throw "Bogus entry. Not in dictionary, " + oldCode + " / " + this.dictionary.length + ", position: " + this.position;
-          }
-          var _newVal = oldVal.concat(this.dictionary[oldCode][0]);
-          this.appendArray(this.result, _newVal);
-          this.addToDictionary(_newVal);
-          oldCode = code;
-        }
-      }
-      // This is strange. It seems like the
-      if (this.dictionary.length >= Math.pow(2, this.byteLength) - 1) {
-        this.byteLength++;
-      }
-      code = this.getNext(mydataview);
-    }
-    return new Uint8Array(this.result);
-  },
-
-  appendArray: function appendArray(dest, source) {
-    for (var i = 0; i < source.length; i++) {
-      dest.push(source[i]);
-    }
-    return dest;
-  },
-
-  haveBytesChanged: function haveBytesChanged() {
-    if (this.dictionary.length >= Math.pow(2, this.byteLength)) {
-      this.byteLength++;
-      return true;
-    }
-    return false;
-  },
-
-  addToDictionary: function addToDictionary(arr) {
-    this.dictionary.push(arr);
-    if (this._makeEntryLookup) {
-      this.entryLookup[arr] = this.dictionary.length - 1;
-    }
-    this.haveBytesChanged();
-    return this.dictionary.length - 1;
-  },
-
-  getNext: function getNext(dataview) {
-    var byte = this.getByte(dataview, this.position, this.byteLength);
-    this.position += this.byteLength;
-    return byte;
-  },
-
-  // This binary representation might actually be as fast as the completely illegible bit shift approach
-  //
-  getByte: function getByte(dataview, position, length) {
-    var d = position % 8;
-    var a = Math.floor(position / 8);
-    var de = 8 - d;
-    var ef = position + length - (a + 1) * 8;
-    var fg = 8 * (a + 2) - (position + length);
-    var dg = (a + 2) * 8 - position;
-    fg = Math.max(0, fg);
-    if (a >= dataview.byteLength) {
-      console.warn('ran off the end of the buffer before finding EOI_CODE (end on input code)');
-      return EOI_CODE;
-    }
-    var chunk1 = dataview.getUint8(a, this.littleEndian) & Math.pow(2, 8 - d) - 1;
-    chunk1 = chunk1 << length - de;
-    var chunks = chunk1;
-    if (a + 1 < dataview.byteLength) {
-      var chunk2 = dataview.getUint8(a + 1, this.littleEndian) >>> fg;
-      chunk2 = chunk2 << Math.max(0, length - dg);
-      chunks += chunk2;
-    }
-    if (ef > 8 && a + 2 < dataview.byteLength) {
-      var hi = (a + 3) * 8 - (position + length);
-      var chunk3 = dataview.getUint8(a + 2, this.littleEndian) >>> hi;
-      chunks += chunk3;
-    }
-    return chunks;
-  },
-
-  // compress has not been optimized and uses a uint8 array to hold binary values.
-  compress: function compress(input) {
-    this._makeEntryLookup = true;
-    this.initDictionary();
-    this.position = 0;
-    var resultBits = [];
-    var omega = [];
-    resultBits = this.appendArray(resultBits, this.binaryFromByte(CLEAR_CODE, this.byteLength)); // resultBits.concat(Array.from(this.binaryFromByte(this.CLEAR_CODE, this.byteLength)))
-    for (var i = 0; i < input.length; i++) {
-      var k = [input[i]];
-      var omk = omega.concat(k);
-      if (this.entryLookup[omk] !== undefined) {
-        omega = omk;
-      } else {
-        var _code = this.entryLookup[omega];
-        var _bin = this.binaryFromByte(_code, this.byteLength);
-        resultBits = this.appendArray(resultBits, _bin);
-        this.addToDictionary(omk);
-        omega = k;
-        if (this.dictionary.length >= Math.pow(2, MAX_BITS)) {
-          resultBits = this.appendArray(resultBits, this.binaryFromByte(CLEAR_CODE, this.byteLength));
-          this.initDictionary();
-        }
-      }
-    }
-    var code = this.entryLookup[omega];
-    var bin = this.binaryFromByte(code, this.byteLength);
-    resultBits = this.appendArray(resultBits, bin);
-    resultBits = resultBits = this.appendArray(resultBits, this.binaryFromByte(EOI_CODE, this.byteLength));
-    this.binary = resultBits;
-    this.result = this.binaryToUint8(resultBits);
-    return this.result;
-  },
-
-  byteFromCode: function byteFromCode(code) {
-    var res = this.dictionary[code];
-    return res;
-  },
-
-  binaryFromByte: function binaryFromByte(byte) {
-    var byteLength = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 8;
-
-    var res = new Uint8Array(byteLength);
-    for (var i = 0; i < res.length; i++) {
-      var mask = Math.pow(2, i);
-      var isOne = (byte & mask) > 0;
-      res[res.length - 1 - i] = isOne;
-    }
-    return res;
-  },
-
-  binaryToNumber: function binaryToNumber(bin) {
-    var res = 0;
-    for (var i = 0; i < bin.length; i++) {
-      res += Math.pow(2, bin.length - i - 1) * bin[i];
-    }
-    return res;
-  },
-
-  inputToBinary: function inputToBinary(input) {
-    var inputByteLength = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 8;
-
-    var res = new Uint8Array(input.length * inputByteLength);
-    for (var i = 0; i < input.length; i++) {
-      var bin = this.binaryFromByte(input[i], inputByteLength);
-      res.set(bin, i * inputByteLength);
-    }
-    return res;
-  },
-
-  binaryToUint8: function binaryToUint8(bin) {
-    var result = new Uint8Array(Math.ceil(bin.length / 8));
-    var index = 0;
-    for (var i = 0; i < bin.length; i += 8) {
-      var val = 0;
-      for (var j = 0; j < 8 && i + j < bin.length; j++) {
-        val = val + bin[i + j] * Math.pow(2, 8 - j - 1);
-      }
-      result[index] = val;
-      index++;
-    }
-    return result;
+function getByte(array, position, length) {
+  var d = position % 8;
+  var a = Math.floor(position / 8);
+  var de = 8 - d;
+  var ef = position + length - (a + 1) * 8;
+  var fg = 8 * (a + 2) - (position + length);
+  var dg = (a + 2) * 8 - position;
+  fg = Math.max(0, fg);
+  if (a >= array.length) {
+    console.warn('ran off the end of the buffer before finding EOI_CODE (end on input code)');
+    return EOI_CODE;
   }
-};
-
-// the actual decoder interface
-
-function LZWDecoder() {
-  this.decompressor = new LZW();
+  var chunk1 = array[a] & Math.pow(2, 8 - d) - 1;
+  chunk1 = chunk1 << length - de;
+  var chunks = chunk1;
+  if (a + 1 < array.length) {
+    var chunk2 = array[a + 1] >>> fg;
+    chunk2 = chunk2 << Math.max(0, length - dg);
+    chunks += chunk2;
+  }
+  if (ef > 8 && a + 2 < array.length) {
+    var hi = (a + 3) * 8 - (position + length);
+    var chunk3 = array[a + 2] >>> hi;
+    chunks += chunk3;
+  }
+  return chunks;
 }
+
+function appendReversed(dest, source) {
+  for (var i = source.length - 1; i >= 0; i--) {
+    dest.push(source[i]);
+  }
+  return dest;
+}
+
+function decompress(input) {
+  var dictionary_index = new Uint16Array(4093);
+  var dictionary_char = new Uint8Array(4093);
+  for (var i = 0; i <= 257; i++) {
+    dictionary_index[i] = 4096;
+    dictionary_char[i] = i;
+  }
+  var dictionary_length = 258;
+  var byteLength = MIN_BITS;
+  var position = 0;
+
+  function initDictionary() {
+    dictionary_length = 258;
+    byteLength = MIN_BITS;
+  }
+  function getNext(array) {
+    var byte = getByte(array, position, byteLength);
+    position += byteLength;
+    return byte;
+  }
+  function addToDictionary(i, c) {
+    dictionary_char[dictionary_length] = c;
+    dictionary_index[dictionary_length] = i;
+    dictionary_length++;
+    if (dictionary_length >= Math.pow(2, byteLength)) {
+      byteLength++;
+    }
+    return dictionary_length - 1;
+  }
+  function get_dictionary_reversed(n) {
+    var rev = [];
+    while (n !== 4096) {
+      rev.push(dictionary_char[n]);
+      n = dictionary_index[n];
+    }
+    return rev;
+  }
+
+  var result = [];
+  initDictionary();
+  var array = new Uint8Array(input);
+  var code = getNext(array);
+  var oldCode;
+  while (code !== EOI_CODE) {
+    if (code === CLEAR_CODE) {
+      initDictionary();
+      code = getNext(array);
+      while (code === CLEAR_CODE) {
+        code = getNext(array);
+      }
+      if (code > CLEAR_CODE) {
+        throw 'corrupted code at scanline ' + code;
+      }
+      if (code === EOI_CODE) {
+        break;
+      } else {
+        var val = get_dictionary_reversed(code);
+        appendReversed(result, val);
+        oldCode = code;
+      }
+    } else {
+      if (code < dictionary_length) {
+        var _val = get_dictionary_reversed(code);
+        appendReversed(result, _val);
+        addToDictionary(oldCode, _val[_val.length - 1]);
+        oldCode = code;
+      } else {
+        var oldVal = get_dictionary_reversed(oldCode);
+        if (!oldVal) {
+          throw "Bogus entry. Not in dictionary, " + oldCode + " / " + dictionary_length + ", position: " + position;
+        }
+        appendReversed(result, oldVal);
+        result.push(oldVal[oldVal.length - 1]);
+        addToDictionary(oldCode, oldVal[oldVal.length - 1]);
+        oldCode = code;
+      }
+    }
+    if (dictionary_length >= Math.pow(2, byteLength) - 1) {
+      byteLength++;
+    }
+    code = getNext(array);
+  }
+  return new Uint8Array(result);
+}
+
+function LZWDecoder() {}
 
 LZWDecoder.prototype = Object.create(AbstractDecoder.prototype);
 LZWDecoder.prototype.constructor = LZWDecoder;
 LZWDecoder.prototype.decodeBlock = function (buffer) {
-  return this.decompressor.decompress(buffer).buffer;
+  return decompress(buffer, false).buffer;
 };
 
 module.exports = LZWDecoder;
-},{"../abstractdecoder.js":4}],7:[function(require,module,exports){
+},{"../abstractdecoder.js":5}],8:[function(require,module,exports){
 "use strict";
 
 var AbstractDecoder = require("../abstractdecoder.js");
@@ -2341,7 +2369,7 @@ PackbitsDecoder.prototype.decodeBlock = function (buffer) {
 };
 
 module.exports = PackbitsDecoder;
-},{"../abstractdecoder.js":4}],8:[function(require,module,exports){
+},{"../abstractdecoder.js":5}],9:[function(require,module,exports){
 "use strict";
 
 var AbstractDecoder = require("../abstractdecoder.js");
@@ -2355,7 +2383,7 @@ RawDecoder.prototype.decodeBlock = function (buffer) {
 };
 
 module.exports = RawDecoder;
-},{"../abstractdecoder.js":4}],9:[function(require,module,exports){
+},{"../abstractdecoder.js":5}],10:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -2444,7 +2472,7 @@ var DataView64 = function () {
 }();
 
 module.exports = DataView64;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 var globals = require("./globals.js");
@@ -2609,7 +2637,7 @@ GeoTIFF.prototype = {
     }
 
     var geoKeyDirectory = {};
-    for (var i = 4; i < rawGeoKeyDirectory[3] * 4; i += 4) {
+    for (var i = 4; i <= rawGeoKeyDirectory[3] * 4; i += 4) {
       var key = geoKeyNames[rawGeoKeyDirectory[i]],
           location = rawGeoKeyDirectory[i + 1] ? fieldTagNames[rawGeoKeyDirectory[i + 1]] : null,
           count = rawGeoKeyDirectory[i + 2],
@@ -2682,7 +2710,7 @@ GeoTIFF.prototype = {
 };
 
 module.exports = GeoTIFF;
-},{"./dataview64.js":9,"./geotiffimage.js":11,"./globals.js":12}],11:[function(require,module,exports){
+},{"./dataview64.js":10,"./geotiffimage.js":12,"./globals.js":13}],12:[function(require,module,exports){
 "use strict";
 
 var globals = require("./globals.js");
@@ -2691,6 +2719,7 @@ var RawDecoder = require("./compression/raw.js");
 var LZWDecoder = require("./compression/lzw.js");
 var DeflateDecoder = require("./compression/deflate.js");
 var PackbitsDecoder = require("./compression/packbits.js");
+var applyPredictor = require("./predictor.js").applyPredictor;
 
 var sum = function sum(array, start, end) {
   var s = 0;
@@ -2982,6 +3011,7 @@ GeoTIFFImage.prototype = {
     var imageWidth = this.getWidth();
 
     var predictor = this.fileDirectory.Predictor || 1;
+    var bitsPerSample = this.fileDirectory.BitsPerSample;
 
     var srcSampleOffsets = [];
     var sampleReaders = [];
@@ -3011,7 +3041,11 @@ GeoTIFFImage.prototype = {
 
     function onTileGot(error, tile) {
       if (!error) {
-        var dataView = new DataView(tile.data);
+        var buffer = tile.data;
+        if (predictor !== 1) {
+          buffer = applyPredictor(buffer, predictor, tileWidth, tileHeight, bitsPerSample);
+        }
+        var dataView = new DataView(buffer);
 
         var firstLine = tile.y * tileHeight;
         var firstCol = tile.x * tileWidth;
@@ -3025,19 +3059,9 @@ GeoTIFFImage.prototype = {
             var value = sampleReaders[sampleIndex].call(dataView, pixelOffset + srcSampleOffsets[sampleIndex], littleEndian);
             var windowCoordinate;
             if (interleave) {
-              if (predictor !== 1 && x > 0) {
-                windowCoordinate = (y + firstLine - imageWindow[1]) * windowWidth * samples.length + (x + firstCol - imageWindow[0] - 1) * samples.length + sampleIndex;
-                value += valueArrays[windowCoordinate];
-              }
-
               windowCoordinate = (y + firstLine - imageWindow[1]) * windowWidth * samples.length + (x + firstCol - imageWindow[0]) * samples.length + sampleIndex;
               valueArrays[windowCoordinate] = value;
             } else {
-              if (predictor !== 1 && x > 0) {
-                windowCoordinate = (y + firstLine - imageWindow[1]) * windowWidth + x - 1 + firstCol - imageWindow[0];
-                value += valueArrays[sampleIndex][windowCoordinate];
-              }
-
               windowCoordinate = (y + firstLine - imageWindow[1]) * windowWidth + x + firstCol - imageWindow[0];
               valueArrays[sampleIndex][windowCoordinate] = value;
             }
@@ -3112,7 +3136,12 @@ GeoTIFFImage.prototype = {
             if (this.planarConfiguration === 2) {
               bytesPerPixel = this.getSampleByteSize(sample);
             }
-            var tile = new DataView(this.getTileOrStrip(xTile, yTile, sample));
+
+            var buffer = this.getTileOrStrip(xTile, yTile, sample);
+            if (predictor !== 1) {
+              buffer = applyPredictor(buffer, predictor, tileWidth, tileHeight, this.fileDirectory.BitsPerSample);
+            }
+            var tile = new DataView(buffer);
 
             var reader = sampleReaders[sampleIndex];
             var ymax = Math.min(tileHeight, tileHeight - (lastLine - imageWindow[3]));
@@ -3132,19 +3161,9 @@ GeoTIFFImage.prototype = {
 
                 var windowCoordinate;
                 if (interleave) {
-                  if (predictor !== 1 && x > 0) {
-                    windowCoordinate = (y + firstLine - imageWindow[1]) * windowWidth * samples.length + (x + firstCol - imageWindow[0] - 1) * samples.length + sampleIndex;
-                    value += valueArrays[windowCoordinate];
-                  }
-
                   windowCoordinate = (y + firstLine - imageWindow[1]) * windowWidth * samples.length + (x + firstCol - imageWindow[0]) * samples.length + sampleIndex;
                   valueArrays[windowCoordinate] = value;
                 } else {
-                  if (predictor !== 1 && x > 0) {
-                    windowCoordinate = (y + firstLine - imageWindow[1]) * windowWidth + x - 1 + firstCol - imageWindow[0];
-                    value += valueArrays[sampleIndex][windowCoordinate];
-                  }
-
                   windowCoordinate = (y + firstLine - imageWindow[1]) * windowWidth + x + firstCol - imageWindow[0];
                   valueArrays[sampleIndex][windowCoordinate] = value;
                 }
@@ -3456,11 +3475,14 @@ GeoTIFFImage.prototype = {
    */
   getOrigin: function getOrigin() {
     var tiePoints = this.fileDirectory.ModelTiepoint;
-    if (!tiePoints || tiePoints.length !== 6) {
+    var modelTransformation = this.fileDirectory.ModelTransformation;
+    if (tiePoints && tiePoints.length === 6) {
+      return [tiePoints[3], tiePoints[4], tiePoints[5]];
+    } else if (modelTransformation) {
+      return [modelTransformation[3], modelTransformation[7], modelTransformation[11]];
+    } else {
       throw new Error("The image does not have an affine transformation.");
     }
-
-    return [tiePoints[3], tiePoints[4], tiePoints[5]];
   },
 
   /**
@@ -3469,11 +3491,16 @@ GeoTIFFImage.prototype = {
    * @returns {Array} The resolution as a vector
    */
   getResolution: function getResolution() {
-    if (!this.fileDirectory.ModelPixelScale) {
+    var modelPixelScale = this.fileDirectory.ModelPixelScale;
+    var modelTransformation = this.fileDirectory.ModelTransformation;
+
+    if (modelPixelScale) {
+      return [modelPixelScale[0], modelPixelScale[1], modelPixelScale[2]];
+    } else if (modelTransformation) {
+      return [modelTransformation[0], modelTransformation[5], modelTransformation[10]];
+    } else {
       throw new Error("The image does not have an affine transformation.");
     }
-
-    return [this.fileDirectory.ModelPixelScale[0], this.fileDirectory.ModelPixelScale[1], this.fileDirectory.ModelPixelScale[2]];
   },
 
   /**
@@ -3505,7 +3532,7 @@ GeoTIFFImage.prototype = {
 };
 
 module.exports = GeoTIFFImage;
-},{"./compression/deflate.js":5,"./compression/lzw.js":6,"./compression/packbits.js":7,"./compression/raw.js":8,"./globals.js":12,"./rgb.js":14}],12:[function(require,module,exports){
+},{"./compression/deflate.js":6,"./compression/lzw.js":7,"./compression/packbits.js":8,"./compression/raw.js":9,"./globals.js":13,"./predictor.js":15,"./rgb.js":16}],13:[function(require,module,exports){
 "use strict";
 
 var fieldTagNames = {
@@ -3760,7 +3787,7 @@ module.exports = {
   geoKeyNames: geoKeyNames,
   parseXml: parseXml
 };
-},{"xmldom":28}],13:[function(require,module,exports){
+},{"xmldom":29}],14:[function(require,module,exports){
 "use strict";
 
 var GeoTIFF = require("./geotiff.js");
@@ -3793,8 +3820,96 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 }
 if (typeof window !== "undefined") {
   window["GeoTIFF"] = { parse: parse };
+} else if (typeof self !== "undefined") {
+  self["GeoTIFF"] = { parse: parse }; // jshint ignore:line
 }
-},{"./geotiff.js":10}],14:[function(require,module,exports){
+},{"./geotiff.js":11}],15:[function(require,module,exports){
+'use strict';
+
+function decodeRowAcc(row, stride, bytesPerSample) {
+  var length = row.length;
+  length -= stride;
+  var offset = 0;
+  do {
+    for (var i = stride; i > 0; i--) {
+      row[offset + stride] += row[offset];
+      offset++;
+    }
+
+    length -= stride;
+  } while (length > 0);
+}
+
+function decodeRowFloatingPoint(row, stride, bytesPerSample) {
+  var index = 0;
+  var count = row.length;
+  var wc = count / bytesPerSample;
+  var i;
+
+  while (count > stride) {
+    for (i = stride; i > 0; --i) {
+      row[index + stride] += row[index];
+      ++index;
+    }
+    count -= stride;
+  }
+
+  var copy = row.slice();
+  for (i = 0; i < wc; ++i) {
+    for (var b = 0; b < bytesPerSample; ++b) {
+      row[bytesPerSample * i + b] = copy[(bytesPerSample - b - 1) * wc + i];
+    }
+  }
+}
+
+module.exports = {
+  applyPredictor: function applyPredictor(block, predictor, width, height, bitsPerSample) {
+    var i;
+    var row;
+    if (!predictor || predictor === 1) {
+      return block;
+    }
+
+    for (i = 0; i < bitsPerSample.length; ++i) {
+      if (bitsPerSample[i] % 8 !== 0) {
+        throw new Error('When decoding with predictor, only multiple of 8 bits are supported.');
+      }
+      if (bitsPerSample[i] !== bitsPerSample[0]) {
+        throw new Error('When decoding with predictor, all samples must have the same size.');
+      }
+    }
+
+    var bytesPerSample = bitsPerSample[0] / 8;
+    var stride = bitsPerSample.length;
+
+    for (i = 0; i < height; ++i) {
+      if (predictor === 2) {
+        // horizontal prediction
+
+        switch (bitsPerSample[0]) {
+          case 8:
+            row = new Uint8Array(block, i * stride * width * bytesPerSample, stride * width * bytesPerSample);
+            break;
+          case 16:
+            row = new Uint16Array(block, i * stride * width * bytesPerSample, stride * width * bytesPerSample / 2);
+            break;
+          case 32:
+            row = new Uint32Array(block, i * stride * width * bytesPerSample, stride * width * bytesPerSample / 4);
+            break;
+          default:
+            throw new Error('Predictor 2 not allowed with ' + bitsPerSample[0] + ' bits per sample.');
+        }
+        decodeRowAcc(row, stride, bytesPerSample);
+      } else if (predictor === 3) {
+        // horizontal floating point
+        row = new Uint8Array(block, i * stride * width * bytesPerSample, width * bytesPerSample);
+        decodeRowFloatingPoint(row, stride, bytesPerSample);
+      }
+    }
+    return block;
+  }
+};
+},{}],16:[function(require,module,exports){
 "use strict";
 
 function fromWhiteIsZero(raster, max, width, height) {
@@ -3865,46 +3980,40 @@ function fromYCbCr(yCbCrRaster, width, height) {
   return rgbRaster;
 }
 
-// converted from here:
-// http://de.mathworks.com/matlabcentral/fileexchange/24010-lab2rgb/content/Lab2RGB.m
-// still buggy
+var Xn = 0.95047;
+var Yn = 1.00000;
+var Zn = 1.08883;
+
+// from https://github.com/antimatter15/rgb-lab/blob/master/color.js
+
 function fromCIELab(cieLabRaster, width, height) {
-  var T1 = 0.008856;
-  var T2 = 0.206893;
-  var MAT = [3.240479, -1.537150, -0.498535, -0.969256, 1.875992, 0.041556, 0.055648, -0.204043, 1.057311];
   var rgbRaster = new Uint8Array(width * height * 3);
-  var L, a, b;
-  var fX, fY, fZ, XT, YT, ZT, X, Y, Z;
+
   for (var i = 0, j = 0; i < cieLabRaster.length; i += 3, j += 3) {
-    L = cieLabRaster[i];
-    a = cieLabRaster[i + 1];
-    b = cieLabRaster[i + 2];
+    var L = cieLabRaster[i + 0];
+    var a_ = cieLabRaster[i + 1] << 24 >> 24; // conversion from uint8 to int8
+    var b_ = cieLabRaster[i + 2] << 24 >> 24; // same
 
-    // Compute Y
-    fY = Math.pow((L + 16) / 116, 3);
-    YT = fY > T1;
-    fY = (YT !== 0) * (L / 903.3) + YT * fY;
-    Y = fY;
+    var y = (L + 16) / 116;
+    var x = a_ / 500 + y;
+    var z = y - b_ / 200;
+    var r, g, b;
 
-    fY = YT * Math.pow(fY, 1 / 3) + (YT !== 0) * (7.787 * fY + 16 / 116);
+    x = Xn * (x * x * x > 0.008856 ? x * x * x : (x - 16 / 116) / 7.787);
+    y = Yn * (y * y * y > 0.008856 ? y * y * y : (y - 16 / 116) / 7.787);
+    z = Zn * (z * z * z > 0.008856 ? z * z * z : (z - 16 / 116) / 7.787);
 
-    // Compute X
-    fX = a / 500 + fY;
-    XT = fX > T2;
-    X = XT * Math.pow(fX, 3) + (XT !== 0) * ((fX - 16 / 116) / 7.787);
+    r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+    g = x * -0.9689 + y * 1.8758 + z * 0.0415;
+    b = x * 0.0557 + y * -0.2040 + z * 1.0570;
 
-    // Compute Z
-    fZ = fY - b / 200;
-    ZT = fZ > T2;
-    Z = ZT * Math.pow(fZ, 3) + (ZT !== 0) * ((fZ - 16 / 116) / 7.787);
+    r = r > 0.0031308 ? 1.055 * Math.pow(r, 1 / 2.4) - 0.055 : 12.92 * r;
+    g = g > 0.0031308 ? 1.055 * Math.pow(g, 1 / 2.4) - 0.055 : 12.92 * g;
+    b = b > 0.0031308 ? 1.055 * Math.pow(b, 1 / 2.4) - 0.055 : 12.92 * b;
 
-    // Normalize for D65 white point
-    X = X * 0.950456;
-    Z = Z * 1.088754;
-
-    rgbRaster[j] = X * MAT[0] + Y * MAT[1] + Z * MAT[2];
-    rgbRaster[j + 1] = X * MAT[3] + Y * MAT[4] + Z * MAT[5];
-    rgbRaster[j + 2] = X * MAT[6] + Y * MAT[7] + Z * MAT[8];
+    rgbRaster[j] = Math.max(0, Math.min(1, r)) * 255;
+    rgbRaster[j + 1] = Math.max(0, Math.min(1, g)) * 255;
+    rgbRaster[j + 2] = Math.max(0, Math.min(1, b)) * 255;
   }
   return rgbRaster;
 }
@@ -3917,93 +4026,7 @@ module.exports = {
   fromYCbCr: fromYCbCr,
   fromCIELab: fromCIELab
 };
-},{}],15:[function(require,module,exports){
-exports.read = function (buffer, offset, isLE, mLen, nBytes) {
-  var e, m
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var nBits = -7
-  var i = isLE ? (nBytes - 1) : 0
-  var d = isLE ? -1 : 1
-  var s = buffer[offset + i]
-
-  i += d
-
-  e = s & ((1 << (-nBits)) - 1)
-  s >>= (-nBits)
-  nBits += eLen
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-
-  m = e & ((1 << (-nBits)) - 1)
-  e >>= (-nBits)
-  nBits += mLen
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-
-  if (e === 0) {
-    e = 1 - eBias
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity)
-  } else {
-    m = m + Math.pow(2, mLen)
-    e = e - eBias
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
-}
-
-exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  var i = isLE ? 0 : (nBytes - 1)
-  var d = isLE ? 1 : -1
-  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
-
-  value = Math.abs(value)
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0
-    e = eMax
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2)
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--
-      c *= 2
-    }
-    if (e + eBias >= 1) {
-      value += rt / c
-    } else {
-      value += rt * Math.pow(2, 1 - eBias)
-    }
-    if (value * c >= 2) {
-      e++
-      c /= 2
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0
-      e = eMax
-    } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen)
-      e = e + eBias
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-      e = 0
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
-
-  e = (e << mLen) | m
-  eLen += mLen
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
-
-  buffer[offset + i - d] |= s * 128
-}
-
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 
@@ -4423,7 +4446,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":17,"./utils/strings":18,"./zlib/constants":20,"./zlib/gzheader":22,"./zlib/inflate":24,"./zlib/messages":26,"./zlib/zstream":27}],17:[function(require,module,exports){
+},{"./utils/common":18,"./utils/strings":19,"./zlib/constants":21,"./zlib/gzheader":23,"./zlib/inflate":25,"./zlib/messages":27,"./zlib/zstream":28}],18:[function(require,module,exports){
 'use strict';
 
 
@@ -4530,7 +4553,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -4717,7 +4740,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":17}],19:[function(require,module,exports){
+},{"./common":18}],20:[function(require,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -4770,7 +4793,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -4840,7 +4863,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -4901,7 +4924,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -4961,7 +4984,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -5308,7 +5331,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -6866,7 +6889,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":17,"./adler32":19,"./crc32":21,"./inffast":23,"./inftrees":25}],25:[function(require,module,exports){
+},{"../utils/common":18,"./adler32":20,"./crc32":22,"./inffast":24,"./inftrees":26}],26:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -7211,7 +7234,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":17}],26:[function(require,module,exports){
+},{"../utils/common":18}],27:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -7245,7 +7268,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -7294,7 +7317,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -7547,7 +7570,7 @@ function appendElement (hander,node) {
 	exports.DOMParser = DOMParser;
 //}
 
-},{"./dom":29,"./sax":30}],29:[function(require,module,exports){
+},{"./dom":30,"./sax":31}],30:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -8793,7 +8816,7 @@ try{
 	exports.XMLSerializer = XMLSerializer;
 //}
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
