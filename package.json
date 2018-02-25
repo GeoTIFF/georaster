@@ -47,9 +47,12 @@
     "path": "^0.12.7",
     "proj4": "^2.4.3",
     "request": "^2.81.0",
+    "simple-xml-dom": "^1.0.0",
     "turf": "^3.0.14",
     "underscore": "^1.8.3",
-    "webpack": "^3.5.4"
+    "webpack": "^3.5.4",
+    "xmldom": "^0.1.27",
+    "xpath": "0.0.27"
   },
   "devDependencies": {
     "browserify": "^14.5.0",
