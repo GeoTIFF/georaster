@@ -4,7 +4,7 @@ notifications:
     email:
         - daniel.j.dufour@gmail.com
 
-install: npm install
+install: npm install && npm run build-geotiff
 
 before_script: cd data && bash setup_data.sh
 

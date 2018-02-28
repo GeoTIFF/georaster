@@ -248,7 +248,7 @@ if (typeof window !== "undefined") {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3,"geotiff":14}],2:[function(require,module,exports){
+},{"buffer":3,"geotiff":13}],2:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -2080,93 +2080,7 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":2,"ieee754":4}],4:[function(require,module,exports){
-exports.read = function (buffer, offset, isLE, mLen, nBytes) {
-  var e, m
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var nBits = -7
-  var i = isLE ? (nBytes - 1) : 0
-  var d = isLE ? -1 : 1
-  var s = buffer[offset + i]
-
-  i += d
-
-  e = s & ((1 << (-nBits)) - 1)
-  s >>= (-nBits)
-  nBits += eLen
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-
-  m = e & ((1 << (-nBits)) - 1)
-  e >>= (-nBits)
-  nBits += mLen
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-
-  if (e === 0) {
-    e = 1 - eBias
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity)
-  } else {
-    m = m + Math.pow(2, mLen)
-    e = e - eBias
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
-}
-
-exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  var i = isLE ? 0 : (nBytes - 1)
-  var d = isLE ? 1 : -1
-  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
-
-  value = Math.abs(value)
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0
-    e = eMax
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2)
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--
-      c *= 2
-    }
-    if (e + eBias >= 1) {
-      value += rt / c
-    } else {
-      value += rt * Math.pow(2, 1 - eBias)
-    }
-    if (value * c >= 2) {
-      e++
-      c /= 2
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0
-      e = eMax
-    } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen)
-      e = e + eBias
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-      e = 0
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
-
-  e = (e << mLen) | m
-  eLen += mLen
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
-
-  buffer[offset + i - d] |= s * 128
-}
-
-},{}],5:[function(require,module,exports){
+},{"base64-js":2,"ieee754":31}],4:[function(require,module,exports){
 "use strict";
 
 function AbstractDecoder() {}
@@ -2179,7 +2093,7 @@ AbstractDecoder.prototype = {
 };
 
 module.exports = AbstractDecoder;
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 var AbstractDecoder = require("../abstractdecoder.js");
@@ -2194,7 +2108,7 @@ DeflateDecoder.prototype.decodeBlock = function (buffer) {
 };
 
 module.exports = DeflateDecoder;
-},{"../abstractdecoder.js":5,"pako/lib/inflate":17}],7:[function(require,module,exports){
+},{"../abstractdecoder.js":4,"pako/lib/inflate":16}],6:[function(require,module,exports){
 "use strict";
 
 //var lzwCompress = require("lzwcompress");
@@ -2335,7 +2249,7 @@ LZWDecoder.prototype.decodeBlock = function (buffer) {
 };
 
 module.exports = LZWDecoder;
-},{"../abstractdecoder.js":5}],8:[function(require,module,exports){
+},{"../abstractdecoder.js":4}],7:[function(require,module,exports){
 "use strict";
 
 var AbstractDecoder = require("../abstractdecoder.js");
@@ -2369,7 +2283,7 @@ PackbitsDecoder.prototype.decodeBlock = function (buffer) {
 };
 
 module.exports = PackbitsDecoder;
-},{"../abstractdecoder.js":5}],9:[function(require,module,exports){
+},{"../abstractdecoder.js":4}],8:[function(require,module,exports){
 "use strict";
 
 var AbstractDecoder = require("../abstractdecoder.js");
@@ -2383,7 +2297,7 @@ RawDecoder.prototype.decodeBlock = function (buffer) {
 };
 
 module.exports = RawDecoder;
-},{"../abstractdecoder.js":5}],10:[function(require,module,exports){
+},{"../abstractdecoder.js":4}],9:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -2472,7 +2386,7 @@ var DataView64 = function () {
 }();
 
 module.exports = DataView64;
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 var globals = require("./globals.js");
@@ -2710,7 +2624,7 @@ GeoTIFF.prototype = {
 };
 
 module.exports = GeoTIFF;
-},{"./dataview64.js":10,"./geotiffimage.js":12,"./globals.js":13}],12:[function(require,module,exports){
+},{"./dataview64.js":9,"./geotiffimage.js":11,"./globals.js":12}],11:[function(require,module,exports){
 "use strict";
 
 var globals = require("./globals.js");
@@ -3532,7 +3446,7 @@ GeoTIFFImage.prototype = {
 };
 
 module.exports = GeoTIFFImage;
-},{"./compression/deflate.js":6,"./compression/lzw.js":7,"./compression/packbits.js":8,"./compression/raw.js":9,"./globals.js":13,"./predictor.js":15,"./rgb.js":16}],13:[function(require,module,exports){
+},{"./compression/deflate.js":5,"./compression/lzw.js":6,"./compression/packbits.js":7,"./compression/raw.js":8,"./globals.js":12,"./predictor.js":14,"./rgb.js":15}],12:[function(require,module,exports){
 "use strict";
 
 var fieldTagNames = {
@@ -3787,7 +3701,7 @@ module.exports = {
   geoKeyNames: geoKeyNames,
   parseXml: parseXml
 };
-},{"xmldom":29}],14:[function(require,module,exports){
+},{"xmldom":28}],13:[function(require,module,exports){
 "use strict";
 
 var GeoTIFF = require("./geotiff.js");
@@ -3823,7 +3737,7 @@ if (typeof window !== "undefined") {
 } else if (typeof self !== "undefined") {
   self["GeoTIFF"] = { parse: parse }; // jshint ignore:line
 }
-},{"./geotiff.js":11}],15:[function(require,module,exports){
+},{"./geotiff.js":10}],14:[function(require,module,exports){
 'use strict';
 
 function decodeRowAcc(row, stride, bytesPerSample) {
@@ -3909,7 +3823,7 @@ module.exports = {
     return block;
   }
 };
-},{}],16:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 
 function fromWhiteIsZero(raster, max, width, height) {
@@ -4026,7 +3940,7 @@ module.exports = {
   fromYCbCr: fromYCbCr,
   fromCIELab: fromCIELab
 };
-},{}],17:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 
@@ -4446,7 +4360,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":18,"./utils/strings":19,"./zlib/constants":21,"./zlib/gzheader":23,"./zlib/inflate":25,"./zlib/messages":27,"./zlib/zstream":28}],18:[function(require,module,exports){
+},{"./utils/common":17,"./utils/strings":18,"./zlib/constants":20,"./zlib/gzheader":22,"./zlib/inflate":24,"./zlib/messages":26,"./zlib/zstream":27}],17:[function(require,module,exports){
 'use strict';
 
 
@@ -4553,7 +4467,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],19:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -4740,7 +4654,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":18}],20:[function(require,module,exports){
+},{"./common":17}],19:[function(require,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -4793,7 +4707,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],21:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -4863,7 +4777,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],22:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -4924,7 +4838,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],23:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -4984,7 +4898,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -5331,7 +5245,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -6889,7 +6803,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":18,"./adler32":20,"./crc32":22,"./inffast":24,"./inftrees":26}],26:[function(require,module,exports){
+},{"../utils/common":17,"./adler32":19,"./crc32":21,"./inffast":23,"./inftrees":25}],25:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -7234,7 +7148,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":18}],27:[function(require,module,exports){
+},{"../utils/common":17}],26:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -7268,7 +7182,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],28:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -7317,7 +7231,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -7570,7 +7484,7 @@ function appendElement (hander,node) {
 	exports.DOMParser = DOMParser;
 //}
 
-},{"./dom":30,"./sax":31}],30:[function(require,module,exports){
+},{"./dom":29,"./sax":30}],29:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -8816,7 +8730,7 @@ try{
 	exports.XMLSerializer = XMLSerializer;
 //}
 
-},{}],31:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -9450,5 +9364,91 @@ function split(source,start){
 
 exports.XMLReader = XMLReader;
 
+
+},{}],31:[function(require,module,exports){
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
 
 },{}]},{},[1]);

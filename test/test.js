@@ -63,8 +63,8 @@ describe('Parsing Metadata', function() {
     Using tiff created from
     http://geomap.arpa.veneto.it/geoserver/wcs?crs=EPSG%3A4326&service=WCS&format=GeoTIFF&request=GetCoverage&height=329&width=368&version=1.0.0&BBox=9.679858245722988%2C13.951082737884812%2C44.183855724634675%2C47.38727409375604&Coverage=geonode%3Aatlanteil
 */
-describe('Parsing Regular Tiff Files', function() {
-  describe('if you pass in tiff from geoserver with metadata', function() {
+describe('Parsing Geonode Files', function() {
+  describe('if you pass in tiff from geoserver', function() {
     it('should parse correctly', function(done) {
         fs.readFile("data/geonode_atlanteil.tif", (error, data) => {
             parse_georaster(data, null, true).then(parsed => {
@@ -73,6 +73,11 @@ describe('Parsing Regular Tiff Files', function() {
                 expect(parsed.xmax).to.equal(13.3486486092171);
                 expect(parsed.ymin).to.equal(47.15260827566466);
                 expect(parsed.ymax).to.equal(49.88669500860327);
+                expect(parsed.values.length).to.equal(1);
+                expect(parsed.values[0].length).to.equal(329);
+                expect(parsed.values[0][0].length).to.equal(368);
+                expect(parsed.maxs[0]).to.equal(5.398769378662109);
+                expect(parsed.mins[0]).to.equal(0);
                 done();                
             });
         });
