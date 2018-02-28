@@ -73,3 +73,7 @@ package-lock.json
 *.swl
 *.swm
 *.swn
+
+# test data files
+data/geonode_atlanteil.tif
+data/*.xml

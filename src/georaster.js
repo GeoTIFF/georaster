@@ -2,16 +2,16 @@
 
 // import this library in case you don't use the web worker
 let GeoTIFF = require("geotiff");
-console.log("GeoTIFF:", GeoTIFF);
 
 let parse_data = (data, debug) => {
 
     try {
+        debug = true;
 
         if (debug) console.log("starting parse_data with", data);
-        if (debug) console.log("\tGeoTIFF:", GeoTIFF);
+        if (debug) console.log("\tGeoTIFF:", typeof GeoTIFF);
 
-        let parser = typeof GeoTIFF !== "undefined" ? GeoTIFF : typeof window !== "undefined" ? window.GeoTIFF : typeof self !== "undefined" ? self.GeoTIFF : null;
+
         //console.log("parser:", parser);
 
         let result = {
@@ -21,30 +21,51 @@ let parse_data = (data, debug) => {
         let height, no_data_value, width;
 
         if (data.raster_type === "geotiff") {
+            
+            let parser = typeof GeoTIFF !== "undefined" ? GeoTIFF : typeof window !== "undefined" ? window.GeoTIFF : typeof self !== "undefined" ? self.GeoTIFF : null;
 
-            //console.log("data.raster_type is geotiff");
+            if (debug) console.log("data.raster_type is geotiff");
             let geotiff = parser.parse(data.arrayBuffer);
-            //console.log("geotiff:", geotiff);
+            if (debug) console.log("geotiff:", geotiff);
 
             let image = geotiff.getImage();
+            if (debug) console.log("image:", image);
 
             let fileDirectory = image.fileDirectory;
 
-            result.projection = image.getGeoKeys().GeographicTypeGeoKey;
+            let geoKeys = image.getGeoKeys();
+
+            if (debug) console.log("geoKeys:", geoKeys);
+            result.projection = geoKeys.GeographicTypeGeoKey;
+            if (debug) console.log("projection:", result.projection);
 
             result.height = height = image.getHeight();
+            if (debug) console.log("result.height:", result.height);
             result.width = width = image.getWidth();
+            if (debug) console.log("result.width:", result.width);            
 
-            // https://www.awaresystems.be/imaging/tiff/tifftags/modeltiepointtag.html
-            result.xmin = fileDirectory.ModelTiepoint[3];
-            result.ymax = fileDirectory.ModelTiepoint[4];
+            let [resolutionX, resolutionY, resolutionZ] = image.getResolution();
+            let flippedX = resolutionX < 0
+            let flippedY = resolutionY < 0;
+            result.pixelHeight = Math.abs(resolutionY);
+            result.pixelWidth = Math.abs(resolutionX);
 
-            // https://www.awaresystems.be/imaging/tiff/tifftags/modelpixelscaletag.html
-            result.pixelHeight = fileDirectory.ModelPixelScale[1];
-            result.pixelWidth = fileDirectory.ModelPixelScale[0];
-
-            result.xmax = result.xmin + width * result.pixelWidth;
-            result.ymin = result.ymax - height * result.pixelHeight;
+            let [originX, originY, originZ ] = image.getOrigin();
+            if (flippedX) {
+                result.xmax = originX;
+                result.xmin = result.xmax - width * result.pixelWidth;
+            } else {
+                result.xmin = originX;
+                result.xmax = result.xmin + width * result.pixelWidth;                
+            }
+            
+            if (flippedY) {
+                result.ymin = originY;
+                result.ymax = result.ymin + height * result.pixelHeight;
+            } else {
+                result.ymax = originY;
+                result.ymin = result.ymax - height * result.pixelHeight;                
+            }
 
             result.no_data_value = no_data_value = fileDirectory.GDAL_NODATA ? parseFloat(fileDirectory.GDAL_NODATA) : null;
             //console.log("no_data_value:", no_data_value);
@@ -58,7 +79,6 @@ let parse_data = (data, debug) => {
                     let end = start + width;
                     values_in_two_dimensions.push(values_in_one_dimension.slice(start, end));
                 }
-                //console.log("values_in_two_dimensions:", values_in_two_dimensions);
                 return values_in_two_dimensions;
             });
         }
@@ -130,28 +150,34 @@ let web_worker_script = `
 
 class GeoRaster {
 
-    constructor(arrayBuffer) {
-        //console.log("starting GeoRaster.constructor with", arrayBuffer.toString());
-
+    constructor(arrayBuffer, metadata, debug) {
+        
+        if (debug) console.log("starting GeoRaster.constructor with", arrayBuffer, metadata);
 
         if (typeof Buffer !== "undefined" && Buffer.isBuffer(arrayBuffer)) {
             arrayBuffer = arrayBuffer.buffer.slice(arrayBuffer.byteOffset, arrayBuffer.byteOffset + arrayBuffer.byteLength);
         }
 
-        this.raster_type = "geotiff";
         this._arrayBuffer = arrayBuffer;
         this._web_worker_is_available = typeof window !== "undefined" && window.Worker !== "undefined";
         this._blob_is_available = typeof Blob !== "undefined";
         this._url_is_available = typeof URL !== "undefined";
 
-        //console.log("this after construction:", this);
+        if (metadata) {
+            this.raster_type = "tiff";
+            this._metadata = metadata;
+        } else {
+            this.raster_type = "geotiff";
+        }
+
+        if (debug) console.log("this after construction:", this);
     }
 
 
-    initialize() {
+    initialize(debug) {
         return new Promise((resolve, reject) => {
-            //console.log("starting GeoRaster.values getter");
-            if (this.raster_type === "geotiff") {
+            if (debug) console.log("starting GeoRaster.initialize");
+            if (this.raster_type === "geotiff" || this.raster_type === "tiff") {
                 if (this._web_worker_is_available) {
                     let url;
                     if (this._blob_is_available) {
@@ -172,12 +198,20 @@ class GeoRaster {
                         }
                         resolve(this);
                     };
-                    //console.log("about to postMessage");
-                    worker.postMessage({arrayBuffer: this._arrayBuffer, raster_type: this.raster_type}, [this._arrayBuffer]);
+                    if (debug) console.log("about to postMessage");
+                    worker.postMessage({
+                        arrayBuffer: this._arrayBuffer,
+                        raster_type: this.raster_type,
+                        metadata: this._metadata
+                    }, [this._arrayBuffer]);
                 } else {
-                    //console.log("web worker is not available");
-                    let result = parse_data({ arrayBuffer: this._arrayBuffer, raster_type: this.raster_type });
-                    //console.log("result:", result);
+                    if (debug) console.log("web worker is not available");
+                    let result = parse_data({
+                        arrayBuffer: this._arrayBuffer,
+                        raster_type: this.raster_type,
+                        metadata: this._metadata
+                    });
+                    if (debug) console.log("result:", result);
                     resolve(result);
                 }
             } else {
@@ -188,7 +222,17 @@ class GeoRaster {
 
 }
 
-var parse_georaster = (input) => new GeoRaster(input).initialize();
+var parse_georaster = (input, metadata, debug) => {
+
+    if (debug) console.log("starting parse_georaster with ", input, metadata);
+
+    if (input === undefined) {
+        let error_message = "[Georaster.parse_georaster] Error. You passed in undefined to parse_georaster. We can't make a raster out of nothing!";
+        throw Error(error_message);
+    }
+
+    return new GeoRaster(input, metadata, debug).initialize(debug);
+}
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
     module.exports = parse_georaster;
