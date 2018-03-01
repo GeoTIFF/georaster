@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/GeoTIFF/georaster#readme",
   "dependencies": {
-    "geotiff": "github:constantinius/geotiff.js",
+    "geotiff": "github:danieljdufour/geotiff.js#877f064",
     "path": "^0.12.7",
     "simple-xml-dom": "^1.0.0",
     "underscore": "^1.8.3",
