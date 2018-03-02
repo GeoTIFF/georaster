@@ -1,12 +1,11 @@
 {
   "name": "georaster",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
   "main": "dist/georaster.dist.js",
   "scripts": {
     "babel": "babel src/georaster.js -o dist/georaster.dist.js",
-    "build-geotiff": "cd node_modules/geotiff && npm install && npm run build",
-    "browserify": "npm run babel && cd dist && browserify georaster_es2015.js -o georaster.browserify.js",
+    "browserify": "npm run babel && cd dist && browserify georaster.dist.js -o georaster.browserify.js",
     "build": "npm run browserify",
     "test": "npm run babel && ./node_modules/.bin/mocha --reporter spec"
   },
