@@ -71,8 +71,8 @@ describe('Parsing Geonode Files', function() {
                 expect(parsed.projection).to.equal(4326);
                 expect(parsed.xmin).to.equal(10.2822923743907);
                 expect(parsed.xmax).to.equal(13.3486486092171);
-                expect(parsed.ymin).to.equal(47.15260827566466);
-                expect(parsed.ymax).to.equal(49.88669500860327);
+                expect(parsed.ymin).to.equal(44.418521542726054);
+                expect(parsed.ymax).to.equal(47.15260827566466);
                 expect(parsed.values.length).to.equal(1);
                 expect(parsed.values[0].length).to.equal(329);
                 expect(parsed.values[0][0].length).to.equal(368);
