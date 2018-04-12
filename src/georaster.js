@@ -13,18 +13,30 @@ let parse_data = (data, debug) => {
 
         //console.log("parser:", parser);
 
-        let result = {
-            _arrayBuffer: data.arrayBuffer
-        };
+        let result = {};
 
         let height, no_data_value, width;
 
-        if (data.raster_type === "geotiff") {
+        if (data.raster_type === "object") {
+            result.values = data.data;
+            result.height = height = data.metadata.height || result.values[0].length;
+            result.width = width = data.metadata.width || result.values[0][0].length;
+            result.pixelHeight = data.metadata.pixelHeight;
+            result.pixelWidth = data.metadata.pixelWidth;
+            result.projection = data.metadata.projection;
+            result.xmin = data.metadata.xmin;
+            result.ymax = data.metadata.ymax;
+            result.no_data_value = no_data_value = data.metadata.no_data_value;
+            result.number_of_rasters = result.values.length;
+            result.xmax = result.xmin + result.width * result.pixelWidth;
+            result.ymin = result.ymax - result.height * result.pixelHeight;
+        } else if (data.raster_type === "geotiff") {
+            result._data = data.data;
             
             let parser = typeof GeoTIFF !== "undefined" ? GeoTIFF : typeof window !== "undefined" ? window.GeoTIFF : typeof self !== "undefined" ? self.GeoTIFF : null;
 
             if (debug) console.log("data.raster_type is geotiff");
-            let geotiff = parser.parse(data.arrayBuffer);
+            let geotiff = parser.parse(data.data);
             if (debug) console.log("geotiff:", geotiff);
 
             let image = geotiff.getImage();
@@ -79,6 +91,7 @@ let parse_data = (data, debug) => {
         for (let raster_index = 0; raster_index < result.number_of_rasters; raster_index++) {
 
             let rows = result.values[raster_index];
+            console.log("rows:", rows);
 
             for (let row_index = 0; row_index < height; row_index++) {
 
@@ -138,26 +151,26 @@ return result}catch(error){console.error("[georaster] error parsing georaster:",
 
 class GeoRaster {
 
-    constructor(arrayBuffer, metadata, debug) {
+    constructor(data, metadata, debug) {
         
-        if (debug) console.log("starting GeoRaster.constructor with", arrayBuffer, metadata);
+        if (debug) console.log("starting GeoRaster.constructor with", data, metadata);
 
-        if (typeof Buffer !== "undefined" && Buffer.isBuffer(arrayBuffer)) {
-            arrayBuffer = arrayBuffer.buffer.slice(arrayBuffer.byteOffset, arrayBuffer.byteOffset + arrayBuffer.byteLength);
-        }
-
-        this._arrayBuffer = arrayBuffer;
         this._web_worker_is_available = typeof window !== "undefined" && window.Worker !== "undefined";
         this._blob_is_available = typeof Blob !== "undefined";
         this._url_is_available = typeof URL !== "undefined";
 
-        if (metadata) {
-            this.raster_type = "tiff";
-            this._metadata = metadata;
-        } else {
+        if (typeof Buffer !== "undefined" && Buffer.isBuffer(data)) {
+            this._data = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
             this.raster_type = "geotiff";
+        } else if (data instanceof ArrayBuffer) {
+            this._data = data;
+            this.raster_type = "geotiff";
+        } else if (Array.isArray(data) && metadata) {
+            this._data = data;
+            this.raster_type = "object";
+            this._metadata = metadata;
         }
-
+        
         if (debug) console.log("this after construction:", this);
     }
 
@@ -165,7 +178,7 @@ class GeoRaster {
     initialize(debug) {
         return new Promise((resolve, reject) => {
             if (debug) console.log("starting GeoRaster.initialize");
-            if (this.raster_type === "geotiff" || this.raster_type === "tiff") {
+            if (this.raster_type === "object" || this.raster_type === "geotiff" || this.raster_type === "tiff") {
                 if (this._web_worker_is_available) {
                     let url;
                     if (this._blob_is_available) {
@@ -188,14 +201,14 @@ class GeoRaster {
                     };
                     if (debug) console.log("about to postMessage");
                     worker.postMessage({
-                        arrayBuffer: this._arrayBuffer,
+                        data: this._data,
                         raster_type: this.raster_type,
                         metadata: this._metadata
-                    }, [this._arrayBuffer]);
+                    }, [this._data]);
                 } else {
                     if (debug) console.log("web worker is not available");
                     let result = parse_data({
-                        arrayBuffer: this._arrayBuffer,
+                        data: this._data,
                         raster_type: this.raster_type,
                         metadata: this._metadata
                     });
