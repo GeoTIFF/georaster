@@ -30,6 +30,7 @@ let parse_data = (data, debug) => {
             result.number_of_rasters = result.values.length;
             result.xmax = result.xmin + result.width * result.pixelWidth;
             result.ymin = result.ymax - result.height * result.pixelHeight;
+            result._data = null;
         } else if (data.raster_type === "geotiff") {
             result._data = data.data;
             
@@ -144,7 +145,7 @@ return new Int32Array(c)}break;case 3:switch(b){case 32:return new Float32Array(
         let data = e.data;
         let result = parse_data(data);
         console.log("posting from web wroker:", result);
-        postMessage(result, [result._arrayBuffer]);
+        postMessage(result, [result._data]);
         close();
     }
 `;
