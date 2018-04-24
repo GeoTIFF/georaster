@@ -145,7 +145,11 @@ return new Int32Array(c)}break;case 3:switch(b){case 32:return new Float32Array(
         let data = e.data;
         let result = parse_data(data);
         console.log("posting from web wroker:", result);
-        postMessage(result, [result._data]);
+        if (result._data instanceof ArrayBuffer) {
+            postMessage(result, [result._data]);
+        } else {
+            postMessage(result);
+        }
         close();
     }
 `;
@@ -201,11 +205,19 @@ class GeoRaster {
                         resolve(this);
                     };
                     if (debug) console.log("about to postMessage");
-                    worker.postMessage({
-                        data: this._data,
-                        raster_type: this.raster_type,
-                        metadata: this._metadata
-                    }, [this._data]);
+                    if (this._data instanceof ArrayBuffer) {
+                        worker.postMessage({
+                            data: this._data,
+                            raster_type: this.raster_type,
+                            metadata: this._metadata
+                        }, [this._data]);
+                    } else {
+                        worker.postMessage({
+                            data: this._data,
+                            raster_type: this.raster_type,
+                            metadata: this._metadata
+                        });
+                    }
                 } else {
                     if (debug) console.log("web worker is not available");
                     let result = parse_data({
