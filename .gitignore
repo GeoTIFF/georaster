@@ -77,3 +77,4 @@ package-lock.json
 # test data files
 data/geonode_atlanteil.tif
 data/*.xml
+data/rgb_raster.tif

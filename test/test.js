@@ -115,3 +115,40 @@ describe('Parsing Geonode Files', function() {
     });
   });
 });
+
+describe('Parsing RGB Rasters', function() {
+  describe('Parsing RGB Raster', function() {
+    it('should parse data/rgb_raster.tif', function(done) {
+        this.timeout(50000);
+        fs.readFile('data/rgb_raster.tif', (error, data) => {
+            parse_georaster(data).then(first_georaster => {
+                try {
+                    console.log("georaster:", first_georaster);
+                    expect(first_georaster.number_of_rasters).to.equal(3);
+                    expect(first_georaster.projection).to.equal(4326);
+                    const expected_height = 3974;
+                    const expected_width = 7322;
+                    expect(first_georaster.values[0]).to.have.lengthOf(expected_height);
+                    expect(first_georaster.values[0][0]).to.have.lengthOf(expected_width);
+                    expect(first_georaster.pixelHeight).to.equal(0.0002695191463334987);
+                    expect(first_georaster.pixelWidth).to.equal(0.0002695191463334988);
+                    expect(first_georaster.xmin).to.equal(-125.57865783690451);
+                    expect(first_georaster.no_data_value).to.equal(null);
+                    
+                    //removing old data
+                    delete first_georaster._data;
+                    
+                    parse_georaster(first_georaster.values, first_georaster).then(secondary_georaster => {
+                        console.log("secondary_georaster:", secondary_georaster);
+                        expect(secondary_georaster.number_of_rasters).to.equal(3);
+                        expect(secondary_georaster.height).to.equal(expected_height);
+                        done();
+                    });
+                } catch (error) {
+                    console.error('error:', error);
+                }
+            });
+        });
+    });
+  });
+});
