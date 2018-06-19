@@ -1,13 +1,12 @@
 {
   "name": "georaster",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
-  "main": "dist/georaster.dist.js",
+  "main": "src/index.js",
   "scripts": {
-    "babel": "babel src/georaster.js -o dist/georaster.dist.js",
-    "browserify": "npm run babel && cd dist && browserify georaster.dist.js -o georaster.browserify.js",
-    "build": "npm run browserify",
-    "test": "npm run babel && ./node_modules/.bin/mocha --reporter spec"
+    "test": "./node_modules/.bin/mocha --reporter spec",
+    "dev": "webpack --mode development",
+    "build": "webpack --mode production"
   },
   "repository": {
     "type": "git",
@@ -33,15 +32,16 @@
     "path": "^0.12.7",
     "simple-xml-dom": "^1.0.0",
     "underscore": "^1.8.3",
-    "webpack": "^3.5.4",
     "xmldom": "^0.1.27",
     "xpath": "0.0.27"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "browserify": "^14.5.0",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-preset-env": "^1.7.0",
     "chai": "^4.1.0",
-    "mocha": "^3.5.0"
+    "mocha": "^3.5.0",
+    "webpack": "^4.12.0",
+    "webpack-cli": "^3.0.8"
   }
 }
