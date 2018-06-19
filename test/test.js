@@ -2,7 +2,7 @@
 
 let expect = require('chai').expect;
 let fs = require('fs');
-let parse_georaster = require('../src/georaster.js');
+let parse_georaster = require('../src/index.js');
 let parse_metadata = require('../src/parse_metadata.js');
 let parse_iso = parse_metadata.parse_iso;
 
