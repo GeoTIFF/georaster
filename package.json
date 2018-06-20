@@ -1,12 +1,13 @@
 {
   "name": "georaster",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
   "main": "src/index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec",
-    "dev": "webpack --mode development",
-    "build": "webpack --mode production"
+    "compile": "node compile_templates.js",
+    "test": "npm run compile && ./node_modules/.bin/mocha --reporter spec",
+    "dev": " npm run compile && webpack --mode development",
+    "build": "npm run compile && webpack --mode production"
   },
   "repository": {
     "type": "git",
