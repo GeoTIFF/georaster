@@ -4,7 +4,7 @@
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
   "main": "src/index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec",
+    "test": "node ./node_modules/.bin/mocha --reporter spec",
     "dev": "webpack --mode development",
     "build": "webpack --mode production"
   },
