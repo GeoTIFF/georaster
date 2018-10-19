@@ -2,12 +2,13 @@
   "name": "georaster",
   "version": "0.3.5",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
-  "main": "src/index.js",
+  "main": "dist/georaster.bundle.min.js",
   "scripts": {
-    "compile": "node compile_templates.js",
-    "test": "npm run compile && ./node_modules/.bin/mocha --reporter spec",
-    "dev": " npm run compile && webpack --mode development",
-    "build": "npm run compile && webpack --mode production"
+    "eslint": "node ./node_modules/eslint/bin/eslint.js src",
+    "fix": "node ./node_modules/eslint/bin/eslint.js src --fix",
+    "test": "node ./node_modules/.bin/mocha --reporter spec",
+    "dev": "webpack --mode development",
+    "build": "webpack --mode production"
   },
   "repository": {
     "type": "git",
@@ -29,18 +30,22 @@
   },
   "homepage": "https://github.com/GeoTIFF/georaster#readme",
   "dependencies": {
-    "geotiff": "github:danieljdufour/geotiff.js#877f064",
+    "geotiff": "^1.0.0-beta.6",
     "path": "^0.12.7",
     "simple-xml-dom": "^1.0.0",
     "underscore": "^1.8.3",
+    "worker-loader": "^2.0.0",
     "xmldom": "^0.1.27",
     "xpath": "0.0.27"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.4",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.7.0",
     "chai": "^4.1.0",
+    "eslint": "^5.7.0",
+    "eslint-config-google": "^0.11.0",
     "mocha": "^3.5.0",
     "webpack": "^4.12.0",
     "webpack-cli": "^3.0.8"
