@@ -3,10 +3,10 @@ Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that pro
 
 # load from url on front-end
 ```
-const parse_georaster = require("georaster");
+const parseGeoraster = require("georaster");
 fetch(url)
   .then(response => response.arrayBuffer() )
-  .then(parse_georaster)
+  .then(parseGeoraster)
   .then(georaster => {
       console.log("georaster:", georaster);
   });
@@ -14,9 +14,9 @@ fetch(url)
 
 # load from file on back-end
 ```
-const parse_georaster = require("georaster");
+const parseGeoraster = require("georaster");
 fs.readFile("data/GeogToWGS84GeoKey5.tif", (error, data) => {
-    parse_georaster(data).then(georaster => {
+    parseGeoraster(data).then(georaster => {
       console.log("georaster:", georaster);
     })
 });
@@ -24,16 +24,16 @@ fs.readFile("data/GeogToWGS84GeoKey5.tif", (error, data) => {
 
 # load from simple object on front-end
 ```
-const parse_georaster = require("georaster");
+const parseGeoraster = require("georaster");
 const values = [ [ [0, 1, 2], [0, 0, 0], [2, 1, 1] ] ];
-const no_data_value = 3;
+const noDataValue = 3;
 const projection = 4326;
 const xmin = -40;
 const ymax = 14;
 const pixelWidth = 0.00001;
 const pixelHeight = 0.00001;
-const metadata = { no_data_value, projection, xmin, ymax, pixelWidth, pixelHeight };
-const georaster = parse_georaster(values, metadata);
+const metadata = { noDataValue, projection, xmin, ymax, pixelWidth, pixelHeight };
+const georaster = parseGeoraster(values, metadata);
 ```
 
 # properties
@@ -42,7 +42,7 @@ const georaster = parse_georaster(values, metadata);
 | maxs | array with max value for each band |
 | mins | array with min value for each band |
 | ranges | array with difference between max and min value for each band |
-| no_data_value | no data value |
+| noDataValue | no data value |
 | pixelWidth | width of pixel in dimension of coordinate reference system |
 | pixelHeight | height of pixel in dimension of coordinate reference system |
 | projection | equal to EPSG code, like 4326 |
