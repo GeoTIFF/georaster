@@ -22,7 +22,7 @@ function processResult(result, debug) {
 
         for (let columnIndex = 0; columnIndex < width; columnIndex++) {
           const value = row[columnIndex];
-          if (value != noDataValue) {
+          if (value != noDataValue && !isNaN(value)) {
             if (typeof min === 'undefined' || value < min) min = value;
             else if (typeof max === 'undefined' || value > max) max = value;
           }
