@@ -1,43 +1,48 @@
 const path = require('path');
 
-const isProduction = (process.env.NODE_ENV === 'production');
+module.exports = (env, argv) => {
 
-module.exports = {
-  entry: './src/index.js',
-  mode: 'production',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: isProduction ? 'georaster.bundle.min.js' : 'georaster.bundle.js',
-    globalObject: 'typeof self !== \'undefined\' ? self : this',
-    library: 'GeoRaster',
-    libraryTarget: 'umd'
-  },
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: /(node_modules)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['env']
-          }
-        }
-      },
-      {
-        test: /worker\.js$/,
-        use: {
-          loader: 'worker-loader',
-          options: {
-            inline: true,
-            fallback: false
+  console.log('mode:', argv.mode)
+
+  const { mode } = argv
+
+  return {
+    entry: './src/index.js',
+    mode,
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: mode === 'production' ? 'georaster.bundle.min.js' : 'georaster.bundle.js',
+      globalObject: 'typeof self !== \'undefined\' ? self : this',
+      library: 'GeoRaster',
+      libraryTarget: 'umd'
+    },
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          exclude: /(node_modules)/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: ['env']
+            }
           }
         },
-      }
-    ]
-  },
-  node: {
-    // prevents this error Module not found: Error: Can't resolve 'fs' in '/home/ubuntu/georaster/node_modules/geotiff/dist'
-    fs: "empty"
+        {
+          test: /worker\.js$/,
+          use: {
+            loader: 'worker-loader',
+            options: {
+              inline: true,
+              fallback: false
+            }
+          },
+        }
+      ]
+    },
+    node: {
+      // prevents this error Module not found: Error: Can't resolve 'fs' in '/home/ubuntu/georaster/node_modules/geotiff/dist'
+      fs: "empty"
+    }
   }
-};
+}
