@@ -4,19 +4,20 @@
     <script src="https://unpkg.com/georaster"></script>
   </head>
   <body>
+    <div id="container"></div>
     <script>
       if (parseGeoraster) {
         document.body.innerHTML = "We have loaded the parseGeoraster function";
       }
 
-      const url = "../data/GeogToWGS84GeoKey5.tif"
+      const url = "https://geotiff.github.io/georaster/data/GeogToWGS84GeoKey5.tif";
       fetch(url)
         .then(response => response.arrayBuffer() )
         .then(parseGeoraster)
         .then(georaster => {
             var message = "<br/> georaster is <br/>";
             message += JSON.stringify(georaster, null, '\t').replace(/\n/g,'<br/>').replace(/\t/g,'&nbsp;&nbsp;&nbsp;');
-            document.body.innerHTML += message;
+            document.getElementById("container").innerHTML = message;
         });
     </script>
   </body>
