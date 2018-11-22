@@ -52,3 +52,9 @@ const georaster = parseGeoraster(values, metadata);
 | xmin | xmin in crs, which is often in longitude |
 | ymin | ymin in crs, which is often in latitude |
 | ymax | ymax in crs, which is often in latitude |
+
+# loading georaster package through a script tag
+```html
+<script src="https://unpkg.com/georaster"></script>
+```
+You can view a simple demo of this here: [link forthcoming]
