@@ -57,4 +57,4 @@ const georaster = parseGeoraster(values, metadata);
 ```html
 <script src="https://unpkg.com/georaster"></script>
 ```
-You can view a simple demo of this here: [link forthcoming]
+You can view a simple demo of this [here](https://geotiff.github.io/georaster/test/)
