@@ -6,18 +6,12 @@
   <body>
     <div id="container"></div>
     <script>
-      if (parseGeoraster) {
-        document.getElementById("container").textContent = "We have loaded the parseGeoraster function";
-      }
-
       const url = "https://geotiff.github.io/georaster/data/GeogToWGS84GeoKey5.tif";
       fetch(url)
         .then(response => response.arrayBuffer() )
         .then(parseGeoraster)
         .then(georaster => {
-            var message = "<br/> georaster is <br/>";
-            message += JSON.stringify(georaster, null, '\t').replace(/\n/g,'<br/>').replace(/\t/g,'&nbsp;&nbsp;&nbsp;');
-            document.getElementById("container").textContent += message;
+            document.getElementById('container').textContent = JSON.stringify(georaster);
         });
     </script>
   </body>
