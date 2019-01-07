@@ -58,3 +58,6 @@ const georaster = parseGeoraster(values, metadata);
 <script src="https://unpkg.com/georaster"></script>
 ```
 You can view a simple demo of this [here](https://geotiff.github.io/georaster/test/)
+
+# Support
+Post a Github issue or contact the package author, Daniel J. Dufour, at daniel.j.dufour@gmail.com
