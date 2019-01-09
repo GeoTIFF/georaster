@@ -19,13 +19,23 @@ class GeoRaster {
       data = new Buffer(data);
     }
 
-    if (typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) {
+    if (typeof data === 'string') {
+      if (debug) console.log('data is a url');
+      this._data = data;
+      this._url = data;
+      this.rasterType = 'geotiff';
+      this.sourceType = 'url';
+    } else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) {
+      // this is node
       if (debug) console.log('data is a buffer');
       this._data = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
       this.rasterType = 'geotiff';
+      this.sourceType = 'Buffer';
     } else if (data instanceof ArrayBuffer) {
+      // this is browser
       this._data = data;
       this.rasterType = 'geotiff';
+      this.sourceType = 'ArrayBuffer';
     } else if (Array.isArray(data) && metadata) {
       this._data = data;
       this.rasterType = 'object';
@@ -57,12 +67,14 @@ class GeoRaster {
             worker.postMessage({
               data: this._data,
               rasterType: this.rasterType,
+              sourceType: this.sourceType,
               metadata: this._metadata,
             }, [this._data]);
           } else {
             worker.postMessage({
               data: this._data,
               rasterType: this.rasterType,
+              sourceType: this.sourceType,
               metadata: this._metadata,
             });
           }
@@ -71,6 +83,7 @@ class GeoRaster {
           parseData({
             data: this._data,
             rasterType: this.rasterType,
+            sourceType: this.sourceType,
             metadata: this._metadata,
           }).then(result => {
             if (debug) console.log('result:', result);

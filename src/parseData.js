@@ -1,4 +1,4 @@
-import {fromArrayBuffer} from 'geotiff';
+import {fromArrayBuffer, fromUrl} from 'geotiff';
 
 function processResult(result, debug) {
   const noDataValue = result.noDataValue;
@@ -67,8 +67,13 @@ export default function parseData(data, debug) {
       } else if (data.rasterType === 'geotiff') {
         result._data = data.data;
 
+        let initFunction = fromArrayBuffer;
+        if (data.sourceType === 'url') {
+          initFunction = fromUrl;
+        }
+
         if (debug) console.log('data.rasterType is geotiff');
-        resolve(fromArrayBuffer(data.data).then(geotiff => {
+        resolve(initFunction(data.data).then(geotiff => {
           if (debug) console.log('geotiff:', geotiff);
           return geotiff.getImage().then(image => {
             if (debug) console.log('image:', image);
@@ -100,18 +105,22 @@ export default function parseData(data, debug) {
 
             result.numberOfRasters = fileDirectory.SamplesPerPixel;
 
-            return image.readRasters().then(rasters => {
-              result.values = rasters.map(valuesInOneDimension => {
-                const valuesInTwoDimensions = [];
-                for (let y = 0; y < height; y++) {
-                  const start = y * width;
-                  const end = start + width;
-                  valuesInTwoDimensions.push(valuesInOneDimension.slice(start, end));
-                }
-                return valuesInTwoDimensions;
+            if (data.sourceType !== 'url') {
+              return image.readRasters().then(rasters => {
+                result.values = rasters.map(valuesInOneDimension => {
+                  const valuesInTwoDimensions = [];
+                  for (let y = 0; y < height; y++) {
+                    const start = y * width;
+                    const end = start + width;
+                    valuesInTwoDimensions.push(valuesInOneDimension.slice(start, end));
+                  }
+                  return valuesInTwoDimensions;
+                });
+                return processResult(result);
               });
-              return processResult(result);
-            });
+            } else {
+              return result;
+            }
           });
         }));
       }
