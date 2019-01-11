@@ -6,6 +6,8 @@ import Worker from './worker.js';
 
 import parseData from './parseData.js';
 
+import {fromUrl} from 'geotiff';
+
 class GeoRaster {
   constructor(data, metadata, debug) {
     if (debug) console.log('starting GeoRaster.constructor with', data, metadata);
@@ -45,8 +47,24 @@ class GeoRaster {
     if (debug) console.log('this after construction:', this);
   }
 
+  async getValues(y, x) {
+    const left = x;
+    const top = y;
+    const right = x + 1;
+    const bottom = y + 1;
 
-  initialize(debug) {
+    const data = await this.image.readRasters({ window: [left, top, right, bottom] });
+    return data;
+  }
+
+
+  async initialize(debug) {
+    if (this._url) {
+      // initialize these outside worker to avoid weird worker error
+      this.geotiff = await fromUrl(this._url);
+      this.image = await this.geotiff.getImage();
+    }
+
     return new Promise((resolve, reject) => {
       if (debug) console.log('starting GeoRaster.initialize');
       if (debug) console.log('this', this);

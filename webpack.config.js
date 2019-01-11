@@ -7,7 +7,7 @@ module.exports = (env, argv) => {
   const { mode } = argv
 
   return {
-    entry: './src/index.js',
+    entry: ['babel-polyfill', './src/index.js'],
     mode,
     output: {
       path: path.resolve(__dirname, 'dist'),
