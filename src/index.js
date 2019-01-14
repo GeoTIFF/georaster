@@ -49,7 +49,10 @@ class GeoRaster {
 
   async getValues(left, top, right, bottom, width, height) {
     console.log('getValues: ', left, top, right, bottom, width, height);
-    let data = await this.image.readRasters({
+    // note this.image and this.geotiff both have a readRasters method;
+    // they are not the same thing. use this.geotiff for experimental version
+    // that reads from best overview
+    let data = await this.geotiff.readRasters({
       window: [left, top, right, bottom],
       width: width,
       height: height,
