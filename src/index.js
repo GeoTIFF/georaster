@@ -47,13 +47,15 @@ class GeoRaster {
     if (debug) console.log('this after construction:', this);
   }
 
-  async getValues(y, x) {
-    const left = x;
-    const top = y;
-    const right = x + 1;
-    const bottom = y + 1;
+  async getValues(left, top, right, bottom, width, height) {
+    console.log('getValues: ', left, top, right, bottom, width, height);
+    let data = await this.image.readRasters({
+      window: [left, top, right, bottom],
+      width: width,
+      height: height,
+      resampleMethod: 'bilinear',
+    });
 
-    const data = await this.image.readRasters({ window: [left, top, right, bottom] });
     return data;
   }
 
@@ -61,7 +63,9 @@ class GeoRaster {
   async initialize(debug) {
     if (this._url) {
       // initialize these outside worker to avoid weird worker error
-      this.geotiff = await fromUrl(this._url);
+      // I don't see how cache option is passed through with fromUrl,
+      // though constantinius says it should work: https://github.com/geotiffjs/geotiff.js/issues/61
+      this.geotiff = await fromUrl(this._url, { cache: true });
       this.image = await this.geotiff.getImage();
     }
 
