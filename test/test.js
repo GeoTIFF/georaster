@@ -152,3 +152,22 @@ describe('Parsing RGB Rasters', function() {
     });
   });
 });
+
+describe('Parsing COG Raster', function() {
+  describe('Parsing COG Raster', function() {
+    it('should parse landsat-pds initialized with url', function(done) {
+        this.timeout(50000);
+        const raster_url = "https://landsat-pds.s3.amazonaws.com/c1/L8/024/030/LC08_L1TP_024030_20180723_20180731_01_T1/LC08_L1TP_024030_20180723_20180731_01_T1_B1.TIF";
+        parseGeoraster(raster_url, null, true).then(first_georaster => {
+            try {
+                console.log("georaster:", first_georaster);
+                expect(first_georaster.numberOfRasters).to.equal(1);
+                expect(first_georaster.projection).to.equal(32616);
+                done();
+            } catch (error) {
+                console.error('error:', error);
+            }
+        });
+    });
+  });
+});
