@@ -1,5 +1,5 @@
-import { fromArrayBuffer, fromUrl } from 'geotiff';
-import { unflatten } from './utils.js';
+import {fromArrayBuffer, fromUrl} from 'geotiff';
+import {unflatten} from './utils.js';
 
 function processResult(result, debug) {
   const noDataValue = result.noDataValue;
@@ -85,7 +85,7 @@ export default function parseData(data, debug) {
 
             const {
               GeographicTypeGeoKey,
-              ProjectedCSTypeGeoKey
+              ProjectedCSTypeGeoKey,
             } = image.getGeoKeys();
 
             result.projection = GeographicTypeGeoKey || ProjectedCSTypeGeoKey;
@@ -113,7 +113,7 @@ export default function parseData(data, debug) {
             if (data.sourceType !== 'url') {
               return image.readRasters().then(rasters => {
                 result.values = rasters.map(valuesInOneDimension => {
-                  return unflatten(valuesInOneDimension, { height, width });
+                  return unflatten(valuesInOneDimension, {height, width});
                 });
                 return processResult(result);
               });

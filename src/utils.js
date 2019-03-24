@@ -28,7 +28,7 @@ representing two-dimensional pixel values
 and returns an array of arrays.
 */
 function unflatten(valuesInOneDimension, size) {
-  const { height, width } = size;
+  const {height, width} = size;
   const valuesInTwoDimensions = [];
   for (let y = 0; y < height; y++) {
     const start = y * width;
@@ -38,4 +38,4 @@ function unflatten(valuesInOneDimension, size) {
   return valuesInTwoDimensions;
 }
 
-module.exports = { countIn1D, countIn2D, unflatten };
+module.exports = {countIn1D, countIn2D, unflatten};

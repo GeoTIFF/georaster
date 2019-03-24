@@ -5,7 +5,7 @@ let fs = require('fs');
 let parseGeoraster = require('../dist/georaster.bundle.js');
 let parseMetadata = require('../src/parse_metadata.js');
 let parseISO = parseMetadata.parseISO;
-let { countIn2D } = require('../src/utils.js');
+let countIn2D = require('../src/utils.js').countIn2D;
 
 describe('Parsing Data Object', function() {
    describe('Parsing Simple Examples', function() {

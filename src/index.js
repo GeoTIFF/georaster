@@ -7,9 +7,9 @@ import nodeFetch from 'node-fetch';
 import Worker from './worker.js';
 
 import parseData from './parseData.js';
-import { unflatten } from './utils.js';
+import {unflatten} from './utils.js';
 
-import { fromUrl } from 'geotiff/src/main.js';
+import {fromUrl} from 'geotiff/src/main.js';
 
 const inBrowser = typeof window === 'object';
 
@@ -18,7 +18,7 @@ if (!inBrowser && typeof global === 'object') {
 }
 
 function getValues(geotiff, options) {
-  const { left, top, right, bottom, width, height } = options;
+  const {left, top, right, bottom, width, height} = options;
   // note this.image and this.geotiff both have a readRasters method;
   // they are not the same thing. use this.geotiff for experimental version
   // that reads from best overview
@@ -33,7 +33,7 @@ function getValues(geotiff, options) {
       We only need the values, assuming the user remembers the width and height.
       Ex: [[0,27723,...11025,12924], width: 10, height: 10]
     */
-    return unflatten(result[0], { height, width });
+    return unflatten(result[0], {height, width});
   });
 };
 
@@ -78,12 +78,12 @@ class GeoRaster {
   }
 
   preinitialize(debug) {
-    if (debug) console.log("starting preinitialize");
+    if (debug) console.log('starting preinitialize');
     if (this._url) {
       // initialize these outside worker to avoid weird worker error
       // I don't see how cache option is passed through with fromUrl,
       // though constantinius says it should work: https://github.com/geotiffjs/geotiff.js/issues/61
-      return fromUrl(this._url, { cache: true, forceXHR: false });
+      return fromUrl(this._url, {cache: true, forceXHR: false});
     } else {
       // no pre-initialization steps required if not using a Cloud Optimized GeoTIFF
       return Promise.resolve();
@@ -91,7 +91,6 @@ class GeoRaster {
   }
 
   initialize(debug) {
-
     return this.preinitialize(debug).then(geotiff => {
       return new Promise((resolve, reject) => {
         if (debug) console.log('starting GeoRaster.initialize');
@@ -108,7 +107,7 @@ class GeoRaster {
               }
               if (this._url) {
                 this._geotiff = geotiff;
-                this.getValues = function (options) {
+                this.getValues = function(options) {
                   return getValues(this._geotiff, options);
                 };
               }
@@ -141,7 +140,7 @@ class GeoRaster {
               if (debug) console.log('result:', result);
               if (this._url) {
                 result._geotiff = geotiff;
-                result.getValues = function (options) {
+                result.getValues = function(options) {
                   return getValues(this._geotiff, options);
                 };
               }
