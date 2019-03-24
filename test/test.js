@@ -6,7 +6,7 @@ let parseGeoraster = require('../dist/georaster.bundle.js');
 let parseMetadata = require('../src/parse_metadata.js');
 let parseISO = parseMetadata.parseISO;
 let { countIn2D } = require('../src/utils.js');
-/*
+
 describe('Parsing Data Object', function() {
    describe('Parsing Simple Examples', function() {
       it('should create raster correctly', function(done) {
@@ -153,7 +153,7 @@ describe('Parsing RGB Rasters', function() {
     });
   });
 });
-*/
+
 describe('Parsing COG Raster', function() {
   describe('Parsing COG Raster', function() {
     it('should parse landsat-pds initialized with url', function(done) {
