@@ -5,7 +5,8 @@ let fs = require('fs');
 let parseGeoraster = require('../dist/georaster.bundle.js');
 let parseMetadata = require('../src/parse_metadata.js');
 let parseISO = parseMetadata.parseISO;
-
+let { countIn2D } = require('../src/utils.js');
+/*
 describe('Parsing Data Object', function() {
    describe('Parsing Simple Examples', function() {
       it('should create raster correctly', function(done) {
@@ -152,18 +153,45 @@ describe('Parsing RGB Rasters', function() {
     });
   });
 });
-
+*/
 describe('Parsing COG Raster', function() {
   describe('Parsing COG Raster', function() {
     it('should parse landsat-pds initialized with url', function(done) {
         this.timeout(50000);
         const raster_url = "https://landsat-pds.s3.amazonaws.com/c1/L8/024/030/LC08_L1TP_024030_20180723_20180731_01_T1/LC08_L1TP_024030_20180723_20180731_01_T1_B1.TIF";
-        parseGeoraster(raster_url, null, true).then(first_georaster => {
+        parseGeoraster(raster_url, null, true).then(georaster => {
             try {
-                console.log("georaster:", first_georaster);
-                expect(first_georaster.numberOfRasters).to.equal(1);
-                expect(first_georaster.projection).to.equal(32616);
-                done();
+                expect(georaster.numberOfRasters).to.equal(1);
+                expect(georaster.projection).to.equal(32616);
+                expect(georaster.height).to.equal(8031);
+                expect(georaster.width).to.equal(7921);
+                expect(georaster.pixelHeight).to.equal(30);
+                expect(georaster.pixelWidth).to.equal(30);
+                expect(georaster.xmin).to.equal(189600);
+                expect(georaster.xmax).to.equal(427230);
+                expect(georaster.ymin).to.equal(4663170);
+                expect(georaster.ymax).to.equal(4904100);
+                expect(georaster.noDataValue).to.equal(null);
+
+                const options = {
+                    left: 0,
+                    top: 0,
+                    right: 4000,
+                    bottom: 4000,
+                    width: 10,
+                    height: 10
+                };
+                georaster.getValues(options).then(values => {
+                    console.log("values:", values);
+                    console.log("Object.keys(values):", Object.keys(values));
+                    expect(values.length).to.equal(10);
+                    expect(values[0].length).to.equal(10);
+                    const histogram = countIn2D(values);
+                    console.log("hist:", histogram);
+                    expect(histogram[0]).to.equal(44);
+                    expect(histogram[10008]).to.equal(1);
+                    done();
+                });
             } catch (error) {
                 console.error('error:', error);
             }
