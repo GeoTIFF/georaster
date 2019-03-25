@@ -2,7 +2,7 @@
 
 let expect = require('chai').expect;
 let fs = require('fs');
-let parseGeoraster = require('../dist/georaster.bundle.js');
+let parseGeoraster = require(`../dist/${process.env.GEORASTER_TEST_BUNDLE_NAME}`);
 let parseMetadata = require('../src/parse_metadata.js');
 let parseISO = parseMetadata.parseISO;
 let countIn2D = require('../src/utils.js').countIn2D;

@@ -10,4 +10,4 @@ install: npm install
 
 before_script: cd data && bash setup_data.sh
 
-script: npm run eslint && npm run test
+script: npm run eslint && npm run test-all
