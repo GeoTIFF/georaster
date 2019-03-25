@@ -1,4 +1,5 @@
-import {fromArrayBuffer} from 'geotiff';
+import {fromArrayBuffer, fromUrl} from 'geotiff';
+import {unflatten} from './utils.js';
 
 function processResult(result, debug) {
   const noDataValue = result.noDataValue;
@@ -38,7 +39,9 @@ function processResult(result, debug) {
   });
 }
 
-// not using async because running into this error: ReferenceError: regeneratorRuntime is not defined
+/* We're not using async because trying to avoid dependency on babel's polyfill
+There can be conflicts when GeoRaster is used in another project that is also
+using @babel/polyfill */
 export default function parseData(data, debug) {
   return new Promise((resolve, reject) => {
     try {
@@ -67,18 +70,25 @@ export default function parseData(data, debug) {
       } else if (data.rasterType === 'geotiff') {
         result._data = data.data;
 
+        let initFunction = fromArrayBuffer;
+        if (data.sourceType === 'url') {
+          initFunction = fromUrl;
+        }
+
         if (debug) console.log('data.rasterType is geotiff');
-        resolve(fromArrayBuffer(data.data).then(geotiff => {
+        resolve(initFunction(data.data).then(geotiff => {
           if (debug) console.log('geotiff:', geotiff);
           return geotiff.getImage().then(image => {
             if (debug) console.log('image:', image);
 
             const fileDirectory = image.fileDirectory;
 
-            const geoKeys = image.getGeoKeys();
+            const {
+              GeographicTypeGeoKey,
+              ProjectedCSTypeGeoKey,
+            } = image.getGeoKeys();
 
-            if (debug) console.log('geoKeys:', geoKeys);
-            result.projection = geoKeys.GeographicTypeGeoKey;
+            result.projection = GeographicTypeGeoKey || ProjectedCSTypeGeoKey;
             if (debug) console.log('projection:', result.projection);
 
             result.height = height = image.getHeight();
@@ -100,18 +110,16 @@ export default function parseData(data, debug) {
 
             result.numberOfRasters = fileDirectory.SamplesPerPixel;
 
-            return image.readRasters().then(rasters => {
-              result.values = rasters.map(valuesInOneDimension => {
-                const valuesInTwoDimensions = [];
-                for (let y = 0; y < height; y++) {
-                  const start = y * width;
-                  const end = start + width;
-                  valuesInTwoDimensions.push(valuesInOneDimension.slice(start, end));
-                }
-                return valuesInTwoDimensions;
+            if (data.sourceType !== 'url') {
+              return image.readRasters().then(rasters => {
+                result.values = rasters.map(valuesInOneDimension => {
+                  return unflatten(valuesInOneDimension, {height, width});
+                });
+                return processResult(result);
               });
-              return processResult(result);
-            });
+            } else {
+              return result;
+            }
           });
         }));
       }

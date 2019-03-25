@@ -2,9 +2,41 @@
 /* global Blob */
 /* global URL */
 
+import nodeFetch from 'node-fetch';
+
 import Worker from './worker.js';
 
 import parseData from './parseData.js';
+import {unflatten} from './utils.js';
+
+import {fromUrl} from 'geotiff/src/main.js';
+
+const inBrowser = typeof window === 'object';
+
+if (!inBrowser && typeof global === 'object') {
+  global.fetch = nodeFetch;
+}
+
+function getValues(geotiff, options) {
+  const {left, top, right, bottom, width, height} = options;
+  // note this.image and this.geotiff both have a readRasters method;
+  // they are not the same thing. use this.geotiff for experimental version
+  // that reads from best overview
+  return geotiff.readRasters({
+    window: [left, top, right, bottom],
+    width: width,
+    height: height,
+    resampleMethod: 'bilinear',
+  }).then(result => {
+    /*
+      The result appears to be an array with a width and height property set.
+      We only need the values, assuming the user remembers the width and height.
+      Ex: [[0,27723,...11025,12924], width: 10, height: 10]
+    */
+    return unflatten(result[0], {height, width});
+  });
+};
+
 
 class GeoRaster {
   constructor(data, metadata, debug) {
@@ -19,13 +51,23 @@ class GeoRaster {
       data = new Buffer(data);
     }
 
-    if (typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) {
+    if (typeof data === 'string') {
+      if (debug) console.log('data is a url');
+      this._data = data;
+      this._url = data;
+      this.rasterType = 'geotiff';
+      this.sourceType = 'url';
+    } else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) {
+      // this is node
       if (debug) console.log('data is a buffer');
       this._data = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
       this.rasterType = 'geotiff';
+      this.sourceType = 'Buffer';
     } else if (data instanceof ArrayBuffer) {
+      // this is browser
       this._data = data;
       this.rasterType = 'geotiff';
+      this.sourceType = 'ArrayBuffer';
     } else if (Array.isArray(data) && metadata) {
       this._data = data;
       this.rasterType = 'object';
@@ -35,51 +77,80 @@ class GeoRaster {
     if (debug) console.log('this after construction:', this);
   }
 
+  preinitialize(debug) {
+    if (debug) console.log('starting preinitialize');
+    if (this._url) {
+      // initialize these outside worker to avoid weird worker error
+      // I don't see how cache option is passed through with fromUrl,
+      // though constantinius says it should work: https://github.com/geotiffjs/geotiff.js/issues/61
+      return fromUrl(this._url, {cache: true, forceXHR: false});
+    } else {
+      // no pre-initialization steps required if not using a Cloud Optimized GeoTIFF
+      return Promise.resolve();
+    }
+  }
 
   initialize(debug) {
-    return new Promise((resolve, reject) => {
-      if (debug) console.log('starting GeoRaster.initialize');
-      if (debug) console.log('this', this);
+    return this.preinitialize(debug).then(geotiff => {
+      return new Promise((resolve, reject) => {
+        if (debug) console.log('starting GeoRaster.initialize');
+        if (debug) console.log('this', this);
 
-      if (this.rasterType === 'object' || this.rasterType === 'geotiff' || this.rasterType === 'tiff') {
-        if (this._web_worker_is_available) {
-          const worker = new Worker();
-          worker.onmessage = (e) => {
-            console.log('main thread received message:', e);
-            const data = e.data;
-            for (const key in data) {
-              this[key] = data[key];
+        if (this.rasterType === 'object' || this.rasterType === 'geotiff' || this.rasterType === 'tiff') {
+          if (this._web_worker_is_available) {
+            const worker = new Worker();
+            worker.onmessage = (e) => {
+              if (debug) console.log('main thread received message:', e);
+              const data = e.data;
+              for (const key in data) {
+                this[key] = data[key];
+              }
+              if (this._url) {
+                this._geotiff = geotiff;
+                this.getValues = function(options) {
+                  return getValues(this._geotiff, options);
+                };
+              }
+              resolve(this);
+            };
+            if (debug) console.log('about to postMessage');
+            if (this._data instanceof ArrayBuffer) {
+              worker.postMessage({
+                data: this._data,
+                rasterType: this.rasterType,
+                sourceType: this.sourceType,
+                metadata: this._metadata,
+              }, [this._data]);
+            } else {
+              worker.postMessage({
+                data: this._data,
+                rasterType: this.rasterType,
+                sourceType: this.sourceType,
+                metadata: this._metadata,
+              });
             }
-            resolve(this);
-          };
-          if (debug) console.log('about to postMessage');
-          if (this._data instanceof ArrayBuffer) {
-            worker.postMessage({
-              data: this._data,
-              rasterType: this.rasterType,
-              metadata: this._metadata,
-            }, [this._data]);
           } else {
-            worker.postMessage({
+            if (debug) console.log('web worker is not available');
+            parseData({
               data: this._data,
               rasterType: this.rasterType,
+              sourceType: this.sourceType,
               metadata: this._metadata,
+            }).then(result => {
+              if (debug) console.log('result:', result);
+              if (this._url) {
+                result._geotiff = geotiff;
+                result.getValues = function(options) {
+                  return getValues(this._geotiff, options);
+                };
+              }
+              resolve(result);
             });
           }
         } else {
-          if (debug) console.log('web worker is not available');
-          parseData({
-            data: this._data,
-            rasterType: this.rasterType,
-            metadata: this._metadata,
-          }).then(result => {
-            if (debug) console.log('result:', result);
-            resolve(result);
-          });
+          reject('couldn\'t find a way to parse');
         }
-      } else {
-        reject('couldn\'t find a way to parse');
-      }
+      });
     });
   }
 }

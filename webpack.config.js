@@ -43,6 +43,11 @@ module.exports = (env, argv) => {
     node: {
       // prevents this error Module not found: Error: Can't resolve 'fs' in '/home/ubuntu/georaster/node_modules/geotiff/dist'
       fs: "empty"
+    },
+    externals: {
+      // we do this so we can manually polyfill fetch as a global variable,
+      // activating geotiff.js' makeFetchSource function when using fromUrl
+      "node-fetch": "node-fetch"
     }
   }
 }
