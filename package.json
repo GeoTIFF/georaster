@@ -6,7 +6,10 @@
   "scripts": {
     "eslint": "node ./node_modules/eslint/bin/eslint.js src",
     "fix": "node ./node_modules/eslint/bin/eslint.js src --fix",
-    "test": "node ./node_modules/.bin/mocha --reporter spec",
+    "test": "npm run test-dev",
+    "test-all": "npm run test-dev && npm run test-prod",
+    "test-dev": "npm run dev && GEORASTER_TEST_BUNDLE_NAME='georaster.bundle.js' node ./node_modules/.bin/mocha --reporter spec",
+    "test-prod": "npm run build && GEORASTER_TEST_BUNDLE_NAME='georaster.bundle.min.js' node ./node_modules/.bin/mocha --reporter spec",
     "dev": "webpack --mode development",
     "build": "webpack --mode production"
   },
