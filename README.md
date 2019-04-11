@@ -85,6 +85,12 @@ that require you to load the whole image into memory.
 | ymin | ymin in crs, which is often in latitude |
 | ymax | ymax in crs, which is often in latitude |
 
+# functions
+| name | description |
+| ---- | ----------- |
+| getValues | described above |
+| toCanvas | experimental! returns a canvas picture of the data.  You can pass in options object with height or width specified |
+
 # loading georaster package through a script tag
 ```html
 <script src="https://unpkg.com/georaster"></script>

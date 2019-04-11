@@ -10,6 +10,7 @@ import parseData from './parseData.js';
 import {unflatten} from './utils.js';
 
 import {fromUrl} from 'geotiff/src/main.js';
+import toCanvas from 'georaster-to-canvas';
 
 const inBrowser = typeof window === 'object';
 
@@ -111,6 +112,9 @@ class GeoRaster {
                   return getValues(this._geotiff, options);
                 };
               }
+              this.toCanvas = function(options) {
+                return toCanvas(this, options);
+              };
               resolve(this);
             };
             if (debug) console.log('about to postMessage');
@@ -144,6 +148,9 @@ class GeoRaster {
                   return getValues(this._geotiff, options);
                 };
               }
+              result.toCanvas = function(options) {
+                return toCanvas(this, options);
+              };
               resolve(result);
             });
           }

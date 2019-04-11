@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../dist/georaster.bundle.min.js"></script>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script>
+        const url = "https://s3.amazonaws.com/geoblaze/wildfires.tiff";
+        fetch(url)
+        .then(response => response.arrayBuffer() )
+        .then(parseGeoraster)
+        .then(georaster => {
+            console.log("georaster", georaster);
+            const canvas = georaster.toCanvas({ height: 500, width: 500 });
+            console.log("canvas:", canvas);
+            document.getElementById("container").appendChild(canvas);
+        });
+    </script>
+  </body>
+</html>
