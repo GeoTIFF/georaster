@@ -124,6 +124,7 @@ export default function parseData(data, debug) {
         }));
       }
     } catch (error) {
+      reject(error);
       console.error('[georaster] error parsing georaster:', error);
     }
   });
