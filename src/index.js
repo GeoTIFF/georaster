@@ -28,13 +28,13 @@ function getValues(geotiff, options) {
     width: width,
     height: height,
     resampleMethod: 'bilinear',
-  }).then(result => {
+  }).then(rasters => {
     /*
       The result appears to be an array with a width and height property set.
       We only need the values, assuming the user remembers the width and height.
       Ex: [[0,27723,...11025,12924], width: 10, height: 10]
     */
-    return unflatten(result[0], {height, width});
+    return rasters.map(raster => unflatten(raster, {height, width}));
   });
 };
 

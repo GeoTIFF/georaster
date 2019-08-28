@@ -184,9 +184,16 @@ describe('Parsing COG Raster', function() {
                 georaster.getValues(options).then(values => {
                     console.log("values:", values);
                     console.log("Object.keys(values):", Object.keys(values));
-                    expect(values.length).to.equal(10);
-                    expect(values[0].length).to.equal(10);
-                    const histogram = countIn2D(values);
+
+                    const numBands = values.length;
+                    const numRows = values[0].length;
+                    const numColumns = values[0][0].length;
+                    expect(numBands).to.equal(1);
+                    expect(numRows).to.equal(10);
+                    expect(numColumns).to.equal(10);
+
+                    // checking histogram for first and only band
+                    const histogram = countIn2D(values[0]);
                     console.log("hist:", histogram);
                     expect(histogram[0]).to.equal(44);
                     expect(histogram[10008]).to.equal(1);
