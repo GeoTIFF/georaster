@@ -140,7 +140,7 @@ class GeoRaster {
               rasterType: this.rasterType,
               sourceType: this.sourceType,
               metadata: this._metadata,
-            }).then(result => {
+            }, debug).then(result => {
               if (debug) console.log('result:', result);
               if (this._url) {
                 result._geotiff = geotiff;
@@ -152,7 +152,7 @@ class GeoRaster {
                 return toCanvas(this, options);
               };
               resolve(result);
-            });
+            }).catch(reject);
           }
         } else {
           reject('couldn\'t find a way to parse');
