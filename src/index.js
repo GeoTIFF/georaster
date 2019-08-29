@@ -19,8 +19,12 @@ if (!inBrowser && typeof global === 'object') {
 }
 
 function urlExists(url) {
-  return fetch(url, {method: 'HEAD'})
-      .then(response => response.status === 200);
+  try {
+    return fetch(url, {method: 'HEAD'})
+        .then(response => response.status === 200);
+  } catch (error) {
+    return Promise.resolve(false);
+  }
 }
 
 function getValues(geotiff, options) {
