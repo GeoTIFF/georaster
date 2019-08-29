@@ -195,8 +195,8 @@ describe('Parsing COG Raster', function() {
                     // checking histogram for first and only band
                     const histogram = countIn2D(values[0]);
                     console.log("hist:", histogram);
-                    expect(histogram[0]).to.equal(44);
-                    expect(histogram[10008]).to.equal(1);
+                    expect(histogram[0]).to.equal(39);
+                    expect(histogram[18522]).to.equal(1);
                     done();
                 });
             } catch (error) {

@@ -38,7 +38,7 @@ const georaster = parseGeoraster(values, metadata);
 
 # load [cloud optimized geotiff](https://www.cogeo.org/)
 This option allows you to basically load the pixels only when you need them versus the other options
-that require you to load the whole image into memory.
+that require you to load the whole image into memory.  It will also attempt to automatically discover any available overview files.
 
 *where to clip*
 
