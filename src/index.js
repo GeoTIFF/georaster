@@ -19,7 +19,7 @@ if (!inBrowser && typeof global === 'object') {
 }
 
 function urlExists(url) {
-  return nodeFetch(url, {method: 'HEAD'})
+  return fetch(url, {method: 'HEAD'})
       .then(response => response.status === 200);
 }
 
