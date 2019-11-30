@@ -3,6 +3,9 @@
   "version": "0.6.2",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
   "main": "dist/georaster.bundle.min.js",
+  "browser": {
+    "./dist/georaster.bundle.min.js": "./dist/georaster.browser.bundle.min.js"
+  },
   "scripts": {
     "browserify": "browserify src/index.js -o georaster.browserify.js",
     "eslint": "node ./node_modules/eslint/bin/eslint.js src",
@@ -11,8 +14,8 @@
     "test-all": "npm run test-dev && npm run test-prod",
     "test-dev": "npm run dev && GEORASTER_TEST_BUNDLE_NAME='georaster.bundle.js' node ./node_modules/.bin/mocha --reporter spec",
     "test-prod": "npm run build && GEORASTER_TEST_BUNDLE_NAME='georaster.bundle.min.js' node ./node_modules/.bin/mocha --reporter spec",
-    "dev": "webpack --mode development",
-    "build": "webpack --mode production"
+    "dev": "webpack --mode development --target node && webpack --mode development --target web",
+    "build": "webpack --mode production --target node && webpack --mode production --target web"
   },
   "repository": {
     "type": "git",
@@ -34,9 +37,9 @@
   },
   "homepage": "https://github.com/GeoTIFF/georaster#readme",
   "dependencies": {
+    "cross-fetch": "^3.0.4",
     "georaster-to-canvas": "0.2.0",
     "geotiff": "^1.0.0-beta.6",
-    "node-fetch": "^2.3.0",
     "path": "^0.12.7",
     "simple-xml-dom": "^1.0.0",
     "underscore": "^1.8.3",

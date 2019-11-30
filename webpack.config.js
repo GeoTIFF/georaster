@@ -1,20 +1,20 @@
 const path = require('path');
 
 module.exports = (env, argv) => {
-
-  console.log('mode:', argv.mode)
-
-  const { mode } = argv
-
+  console.log('mode:', argv.mode);
+  console.log('target:', argv.target);
+  const {mode, target} = argv;
+  const targetFileNamePart = target === 'node' ? '' : '.browser';
   return {
     entry: './src/index.js',
     mode,
+    target: target,
     output: {
       path: path.resolve(__dirname, 'dist'),
-      filename: mode === 'production' ? 'georaster.bundle.min.js' : 'georaster.bundle.js',
+      filename: mode === 'production' ? `georaster${targetFileNamePart}.bundle.min.js` : `georaster${targetFileNamePart}.bundle.js`,
       globalObject: 'typeof self !== \'undefined\' ? self : this',
       library: 'GeoRaster',
-      libraryTarget: 'umd'
+      libraryTarget: 'umd',
     },
     module: {
       rules: [
@@ -24,9 +24,9 @@ module.exports = (env, argv) => {
           use: {
             loader: 'babel-loader',
             options: {
-              presets: ['env']
-            }
-          }
+              presets: ['env'],
+            },
+          },
         },
         {
           test: /worker\.js$/,
@@ -34,20 +34,20 @@ module.exports = (env, argv) => {
             loader: 'worker-loader',
             options: {
               inline: true,
-              fallback: false
-            }
+              fallback: false,
+            },
           },
-        }
-      ]
+        },
+      ],
     },
     node: {
       // prevents this error Module not found: Error: Can't resolve 'fs' in '/home/ubuntu/georaster/node_modules/geotiff/dist'
-      fs: "empty"
+      fs: 'empty',
     },
     externals: {
       // we do this so we can manually polyfill fetch as a global variable,
       // activating geotiff.js' makeFetchSource function when using fromUrl
-      "node-fetch": "node-fetch"
-    }
-  }
-}
+      'node-fetch': 'node-fetch',
+    },
+  };
+};

@@ -2,21 +2,12 @@
 /* global Blob */
 /* global URL */
 
-import nodeFetch from 'node-fetch';
-
+import fetch from 'cross-fetch';
 import Worker from './worker.js';
-
 import parseData from './parseData.js';
 import {unflatten} from './utils.js';
-
 import {fromUrl, fromUrls} from 'geotiff/src/main.js';
 import toCanvas from 'georaster-to-canvas';
-
-const inBrowser = typeof window === 'object';
-
-if (!inBrowser && typeof global === 'object') {
-  global.fetch = nodeFetch;
-}
 
 function urlExists(url) {
   try {
