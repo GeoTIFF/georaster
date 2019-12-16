@@ -12,7 +12,8 @@ import toCanvas from 'georaster-to-canvas';
 function urlExists(url) {
   try {
     return fetch(url, {method: 'HEAD'})
-        .then(response => response.status === 200);
+        .then(response => response.status === 200)
+        .catch(error => false);
   } catch (error) {
     return Promise.resolve(false);
   }
@@ -86,6 +87,7 @@ class GeoRaster {
       // though constantinius says it should work: https://github.com/geotiffjs/geotiff.js/issues/61
       const ovrURL = this._url + '.ovr';
       return urlExists(ovrURL).then(ovrExists => {
+        if (debug) console.log('overview exists:', ovrExists);
         if (ovrExists) {
           return fromUrls(this._url, [ovrURL], {cache: true, forceXHR: false});
         } else {
