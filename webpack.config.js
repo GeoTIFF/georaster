@@ -1,10 +1,18 @@
 const path = require('path');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 module.exports = (env, argv) => {
   console.log('mode:', argv.mode);
   console.log('target:', argv.target);
   const {mode, target} = argv;
   const targetFileNamePart = target === 'node' ? '' : '.browser';
+
+  const plugins = []
+  if (process.env.ANALYZE_GEORASTER_BUNDLE) {
+    plugins.push(BundleAnalyzerPlugin({
+      analyzerHost: process.env.ANALYZER_HOST || "127.0.0.1"
+    }));
+  }
   return {
     entry: './src/index.js',
     mode,
@@ -49,5 +57,6 @@ module.exports = (env, argv) => {
       // activating geotiff.js' makeFetchSource function when using fromUrl
       'node-fetch': 'node-fetch',
     },
+    plugins
   };
 };
