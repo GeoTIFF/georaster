@@ -6,7 +6,7 @@ import fetch from 'cross-fetch';
 import Worker from './worker.js';
 import parseData from './parseData.js';
 import {unflatten} from './utils.js';
-import {fromUrl, fromUrls} from 'geotiff/src/main.js';
+import {fromUrl, fromUrls} from 'geotiff';
 import toCanvas from 'georaster-to-canvas';
 
 function urlExists(url) {

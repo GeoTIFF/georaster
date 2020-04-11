@@ -78,3 +78,4 @@ package-lock.json
 data/geonode_atlanteil.tif
 data/*.xml
 data/rgb_raster.tif
+stats.json

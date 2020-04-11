@@ -2,14 +2,12 @@ const path = require('path');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 module.exports = (env, argv) => {
-  console.log('mode:', argv.mode);
-  console.log('target:', argv.target);
   const {mode, target} = argv;
   const targetFileNamePart = target === 'node' ? '' : '.browser';
 
   const plugins = []
   if (process.env.ANALYZE_GEORASTER_BUNDLE) {
-    plugins.push(BundleAnalyzerPlugin({
+    plugins.push(new BundleAnalyzerPlugin({
       analyzerHost: process.env.ANALYZER_HOST || "127.0.0.1"
     }));
   }
@@ -23,6 +21,13 @@ module.exports = (env, argv) => {
       globalObject: 'typeof self !== \'undefined\' ? self : this',
       library: 'GeoRaster',
       libraryTarget: 'umd',
+    },
+    resolve: {
+      alias: {
+         'geotiff': path.resolve(__dirname, `./node_modules/geotiff/${target === 'node' ? 'dist-node' : 'dist-browser'}/main.js`),
+        'threads$': path.resolve(__dirname, './node_modules/threads/dist'),
+        'txml': path.resolve(__dirname, './node_modules/txml/tXml.min.js')
+      }
     },
     module: {
       rules: [
