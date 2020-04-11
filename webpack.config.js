@@ -1,16 +1,40 @@
+const webpack = require('webpack');
 const path = require('path');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const ThreadsPlugin = require('threads-plugin');
 
 module.exports = (env, argv) => {
+
   const {mode, target} = argv;
   const targetFileNamePart = target === 'node' ? '' : '.browser';
 
-  const plugins = []
+  const plugins = [
+    new webpack.ProvidePlugin({
+      'txml': 'txml'
+    }),
+    new ThreadsPlugin()
+  ];
   if (process.env.ANALYZE_GEORASTER_BUNDLE) {
     plugins.push(new BundleAnalyzerPlugin({
       analyzerHost: process.env.ANALYZER_HOST || "127.0.0.1"
     }));
   }
+
+  const externals = {
+    'fs': 'fs'
+  };
+  // because don't want node-fetch in bundle meant for web
+  if (target === 'web') externals['node-fetch'] = 'node-fetch';
+  // because threads can look for this
+  if (target === 'node') externals['tiny-worker'] = 'tiny-worker';
+  externals['txml'] = 'txml';
+
+  const node = {};
+  // neutralize import 'threads/register' in geotiff.js
+  node['threads/register'] = 'empty';
+  // can't access fs on the web
+  if (target === 'web') node['fs'] = 'empty';
+
   return {
     entry: './src/index.js',
     mode,
@@ -24,8 +48,6 @@ module.exports = (env, argv) => {
     },
     resolve: {
       alias: {
-         'geotiff': path.resolve(__dirname, `./node_modules/geotiff/${target === 'node' ? 'dist-node' : 'dist-browser'}/main.js`),
-        'threads$': path.resolve(__dirname, './node_modules/threads/dist'),
         'txml': path.resolve(__dirname, './node_modules/txml/tXml.min.js')
       }
     },
@@ -53,15 +75,8 @@ module.exports = (env, argv) => {
         },
       ],
     },
-    node: {
-      // prevents this error Module not found: Error: Can't resolve 'fs' in '/home/ubuntu/georaster/node_modules/geotiff/dist'
-      fs: 'empty',
-    },
-    externals: {
-      // we do this so we can manually polyfill fetch as a global variable,
-      // activating geotiff.js' makeFetchSource function when using fromUrl
-      'node-fetch': 'node-fetch',
-    },
+    node,
+    externals,
     plugins
   };
 };

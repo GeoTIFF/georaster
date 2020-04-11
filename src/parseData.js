@@ -1,4 +1,4 @@
-import {fromArrayBuffer, fromUrl} from 'geotiff';
+import {fromArrayBuffer, fromUrl} from 'geotiff/src/main.js';
 import {unflatten} from './utils.js';
 
 function processResult(result, debug) {

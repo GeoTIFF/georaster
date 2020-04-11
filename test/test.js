@@ -124,7 +124,7 @@ describe('Parsing RGB Rasters', function() {
         fs.readFile('data/rgb_raster.tif', (error, data) => {
             parseGeoraster(data).then(first_georaster => {
                 try {
-                    console.log("georaster:", first_georaster);
+                    // console.log("georaster:", first_georaster);
                     expect(first_georaster.numberOfRasters).to.equal(3);
                     expect(first_georaster.projection).to.equal(4326);
                     const expected_height = 3974;
@@ -140,7 +140,7 @@ describe('Parsing RGB Rasters', function() {
                     delete first_georaster._data;
 
                     parseGeoraster(first_georaster.values, first_georaster).then(secondary_georaster => {
-                        console.log("secondary_georaster:", secondary_georaster);
+                        // console.log("secondary_georaster:", secondary_georaster);
                         expect(secondary_georaster.numberOfRasters).to.equal(3);
                         expect(secondary_georaster.height).to.equal(expected_height);
                         done();
