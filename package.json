@@ -1,6 +1,6 @@
 {
   "name": "georaster",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
   "main": "dist/georaster.bundle.min.js",
   "browser": {
@@ -17,12 +17,10 @@
     "test-dev": "npm run dev && GEORASTER_TEST_BUNDLE_NAME='georaster.bundle.js' node ./node_modules/.bin/mocha --reporter spec",
     "test-prod": "npm run build && GEORASTER_TEST_BUNDLE_NAME='georaster.bundle.min.js' node ./node_modules/.bin/mocha --reporter spec",
     "dev": "webpack --mode development --target node && webpack --mode development --target web",
-    "build": "npm run prebuild && npm run build:prod",
-    "mod-geotiff-js": "./node_modules/replace-in-files-cli/cli.js ./node_modules/geotiff/src/pool.js --string=\"import 'threads/register';\" --replacement=\"import { Worker } from 'threads';\"",
+    "build": "npm run build:prod",
     "build:prod": "npm run build:prod:node && npm run build:prod:web",
     "build:prod:node": "webpack --mode production --target node",
-    "build:prod:web": "webpack --mode production --target web",
-    "prebuild": "npm run clean && npm run mod-geotiff-js"
+    "build:prod:web": "webpack --mode production --target web"
   },
   "repository": {
     "type": "git",
@@ -46,7 +44,8 @@
   "dependencies": {
     "cross-fetch": "^3.0.4",
     "georaster-to-canvas": "0.2.0",
-    "geotiff": "^1.0.0-beta.10",
+    "geotiff": "^1.0.0-beta.12",
+    "geotiff-palette": "0.0.0",
     "simple-xml-dom": "^1.0.0",
     "threads": "^1.4.0",
     "tiny-worker": "^2.3.0",

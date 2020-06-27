@@ -1,4 +1,5 @@
-import {fromArrayBuffer, fromUrl} from 'geotiff/src/main.js';
+import {fromArrayBuffer, fromUrl} from 'geotiff';
+import {getPalette} from 'geotiff-palette';
 import {unflatten} from './utils.js';
 
 function processResult(result, debug) {
@@ -109,6 +110,10 @@ export default function parseData(data, debug) {
             result.noDataValue = fileDirectory.GDAL_NODATA ? parseFloat(fileDirectory.GDAL_NODATA) : null;
 
             result.numberOfRasters = fileDirectory.SamplesPerPixel;
+
+            if (fileDirectory.ColorMap) {
+              result.palette = getPalette(image);
+            }
 
             if (data.sourceType !== 'url') {
               return image.readRasters().then(rasters => {

@@ -152,6 +152,22 @@ describe('Parsing RGB Rasters', function() {
         });
     });
   });
+  describe('Parsing RGB Paletted Raster', function() {
+    it('should parse data/rgb_paletted.tif', function(done) {
+        this.timeout(50000);
+        fs.readFile('data/rgb_paletted.tif', (error, data) => {
+            parseGeoraster(data).then(georaster => {
+                try {
+                    expect(georaster.palette).to.be.an('array');
+                    expect(georaster.palette).to.have.lengthOf(256);
+                    done();
+                } catch (error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+  });
 });
 
 describe('Parsing COG Raster', function() {

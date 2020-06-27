@@ -68,7 +68,7 @@ that require you to load the whole image into memory.  It will also attempt to a
   });
 ```
 
-# properties
+# required properties
 | name | description |
 | ---- | ----------- |
 | maxs | array with max value for each band |
@@ -84,6 +84,11 @@ that require you to load the whole image into memory.  It will also attempt to a
 | xmin | xmin in crs, which is often in longitude |
 | ymin | ymin in crs, which is often in latitude |
 | ymax | ymax in crs, which is often in latitude |
+
+# optional properties
+| name | description |
+| ---- | ----------- |
+| palette | Array that maps raster values to RGBA colors |
 
 # functions
 | name | description |
