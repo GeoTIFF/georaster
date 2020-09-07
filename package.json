@@ -1,6 +1,6 @@
 {
   "name": "georaster",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
   "main": "dist/georaster.bundle.min.js",
   "browser": {
@@ -44,7 +44,7 @@
   "dependencies": {
     "cross-fetch": "^3.0.4",
     "georaster-to-canvas": "0.2.0",
-    "geotiff": "^1.0.0-beta.12",
+    "geotiff": "^1.0.0-beta.13",
     "geotiff-palette": "0.0.0",
     "simple-xml-dom": "^1.0.0",
     "threads": "^1.4.0",
