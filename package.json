@@ -51,7 +51,7 @@
     "txml": "^3.1.2",
     "underscore": "^1.8.3",
     "worker-loader": "^2.0.0",
-    "xmldom": "^0.1.27",
+    "xmldom": "^0.5.0",
     "xpath": "0.0.27"
   },
   "devDependencies": {
