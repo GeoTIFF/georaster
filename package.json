@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GeoTIFF/georaster.git"
+    "url": "git+https://github.com/scazz010/georaster.git"
   },
   "keywords": [
     "geotiff",
