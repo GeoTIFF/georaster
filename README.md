@@ -57,6 +57,10 @@ that require you to load the whole image into memory.  It will also attempt to a
 
 `height` is how many pixels **tall** should be the returned image.  This helps to configure the resolution.
 
+*resampling*
+
+`resampleMethod` is how to resample the pixels for the returned image.  This value is passed on to [geotiff.js](https://github.com/geotiffjs/geotiff.js)' readRasters function and defaults to 'bilinear'.  The alternative is 'nearest', which is faster and better for categorical data like landcover and continous classes with smooth variation like temperature.
+
 ```javascript
   const raster_url = "https://landsat-pds.s3.amazonaws.com/c1/L8/024/030/LC08_L1TP_024030_20180723_20180731_01_T1/LC08_L1TP_024030_20180723_20180731_01_T1_B1.TIF";
   parseGeoraster(raster_url).then(georaster => {
