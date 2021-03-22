@@ -1,6 +1,6 @@
 {
   "name": "georaster",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Wrapper around Georeferenced Rasters like GeoTIFF, NetCDF, JPG, and PNG that provides a standard interface",
   "main": "dist/georaster.bundle.min.js",
   "browser": "./dist/georaster.browser.bundle.min.js",
