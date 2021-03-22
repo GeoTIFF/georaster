@@ -20,7 +20,7 @@ function urlExists(url) {
 }
 
 function getValues(geotiff, options) {
-  const {left, top, right, bottom, width, height} = options;
+  const {left, top, right, bottom, width, height, resampleMethod} = options;
   // note this.image and this.geotiff both have a readRasters method;
   // they are not the same thing. use this.geotiff for experimental version
   // that reads from best overview
@@ -28,7 +28,7 @@ function getValues(geotiff, options) {
     window: [left, top, right, bottom],
     width: width,
     height: height,
-    resampleMethod: 'bilinear',
+    resampleMethod: resampleMethod || 'bilinear',
   }).then(rasters => {
     /*
       The result appears to be an array with a width and height property set.
