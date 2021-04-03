@@ -44,15 +44,13 @@
     "georaster-to-canvas": "0.2.0",
     "geotiff": "1.0.0-beta.13",
     "geotiff-palette": "0.0.0",
-    "simple-xml-dom": "1.0.0",
     "threads": "^1.4.0",
     "tiny-worker": "^2.3.0",
     "ts-node": "^8.8.2",
     "txml": "3.1.2",
     "underscore": "^1.8.3",
     "worker-loader": "^2.0.0",
-    "xmldom": "0.1.27",
-    "xpath": "0.0.27"
+    "xml-utils": "^0.2.0"
   },
   "devDependencies": {
     "@babel/types": "^7.9.5",
@@ -65,7 +63,6 @@
     "eslint": "^5.7.0",
     "eslint-config-google": "^0.11.0",
     "mocha": "^6.2.0",
-    "replace-in-files-cli": "^0.3.1",
     "threads-plugin": "^1.3.1",
     "webpack": "^4.12.0",
     "webpack-bundle-analyzer": "^3.6.0",

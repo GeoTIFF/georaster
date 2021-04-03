@@ -7,6 +7,7 @@ let parseMetadata = require('../src/parse_metadata.js');
 let parseISO = parseMetadata.parseISO;
 let countIn2D = require('../src/utils.js').countIn2D;
 
+
 describe('Parsing Data Object', function() {
    describe('Parsing Simple Examples', function() {
       it('should create raster correctly', function(done) {
@@ -76,7 +77,6 @@ describe('Checking Error Catching', function() {
   });
 });
 
-
 describe('Parsing Metadata', function() {
   describe('if you pass in iso xml text', function() {
     it('should parse metadata', function(done) {
@@ -92,7 +92,6 @@ describe('Parsing Metadata', function() {
     });
   });
 });
-
 
 // Using tiff created from http://geomap.arpa.veneto.it/geoserver/wcs?crs=EPSG%3A4326&service=WCS&format=GeoTIFF&request=GetCoverage&height=329&width=368&version=1.0.0&BBox=9.679858245722988%2C13.951082737884812%2C44.183855724634675%2C47.38727409375604&Coverage=geonode%3Aatlanteil
 describe('Parsing Geonode Files', function() {
