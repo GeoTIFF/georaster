@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("fs"), require("tiny-worker"), require("txml"));
+		module.exports = factory(require("tiny-worker"), require("txml"));
 	else if(typeof define === 'function' && define.amd)
-		define(["fs", "tiny-worker", "txml"], factory);
+		define(["tiny-worker", "txml"], factory);
 	else if(typeof exports === 'object')
-		exports["GeoRaster"] = factory(require("fs"), require("tiny-worker"), require("txml"));
+		exports["GeoRaster"] = factory(require("tiny-worker"), require("txml"));
 	else
-		root["GeoRaster"] = factory(root["fs"], root["tiny-worker"], root["txml"]);
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_fs__, __WEBPACK_EXTERNAL_MODULE_tiny_worker__, __WEBPACK_EXTERNAL_MODULE_txml__) {
+		root["GeoRaster"] = factory(root["tiny-worker"], root["txml"]);
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_tiny_worker__, __WEBPACK_EXTERNAL_MODULE_txml__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -1466,7 +1466,7 @@ eval("module.exports = require(\"events\");\n\n//# sourceURL=webpack://GeoRaster
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-eval("module.exports = __WEBPACK_EXTERNAL_MODULE_fs__;\n\n//# sourceURL=webpack://GeoRaster/external_%22fs%22?");
+eval("module.exports = require(\"fs\");\n\n//# sourceURL=webpack://GeoRaster/external_%22fs%22?");
 
 /***/ }),
 

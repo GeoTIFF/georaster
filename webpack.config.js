@@ -20,11 +20,8 @@ module.exports = (env, argv) => {
     }));
   }
 
-  const externals = {
-    'fs': 'fs'
-  };
-  // because don't want node-fetch in bundle meant for web
-  if (target === 'web') externals['node-fetch'] = 'node-fetch';
+  const externals = {};
+
   // because threads can look for this
   if (target === 'node') externals['tiny-worker'] = 'tiny-worker';
   externals['txml'] = 'txml';
@@ -32,6 +29,7 @@ module.exports = (env, argv) => {
   const node = {};
   // neutralize import 'threads/register' in geotiff.js
   node['threads/register'] = 'empty';
+
   // can't access fs on the web
   if (target === 'web') node['fs'] = 'empty';
 
@@ -73,7 +71,11 @@ module.exports = (env, argv) => {
             },
           },
         },
-      ],
+        target === "web" && {
+          test: path.resolve(__dirname, 'node_modules/node-fetch/browser.js'),
+          use: 'null-loader'
+        }
+      ].filter(Boolean),
     },
     node,
     externals,
