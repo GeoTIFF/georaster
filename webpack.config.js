@@ -9,9 +9,6 @@ module.exports = (env, argv) => {
   const targetFileNamePart = target === 'node' ? '' : '.browser';
 
   const plugins = [
-    new webpack.ProvidePlugin({
-      'txml': 'txml'
-    }),
     new ThreadsPlugin()
   ];
   if (process.env.ANALYZE_GEORASTER_BUNDLE) {
@@ -21,12 +18,8 @@ module.exports = (env, argv) => {
   }
 
   const externals = {};
-
-  // because threads can look for this
-  if (target === 'node') externals['tiny-worker'] = 'tiny-worker';
-  externals['txml'] = 'txml';
-
   const node = {};
+
   // neutralize import 'threads/register' in geotiff.js
   node['threads/register'] = 'empty';
 
@@ -43,11 +36,6 @@ module.exports = (env, argv) => {
       globalObject: 'typeof self !== \'undefined\' ? self : this',
       library: 'GeoRaster',
       libraryTarget: 'umd',
-    },
-    resolve: {
-      alias: {
-        'txml': path.resolve(__dirname, './node_modules/txml/tXml.min.js')
-      }
     },
     module: {
       rules: [
@@ -73,6 +61,10 @@ module.exports = (env, argv) => {
         },
         target === "web" && {
           test: path.resolve(__dirname, 'node_modules/node-fetch/browser.js'),
+          use: 'null-loader'
+        },
+        target === "web" && {
+          test: path.resolve(__dirname, 'node_modules/tiny-worker/lib/index.js'),
           use: 'null-loader'
         }
       ].filter(Boolean),
