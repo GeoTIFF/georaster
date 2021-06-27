@@ -31,7 +31,6 @@ export interface Georaster {
   ranges: number[]
 }
 
-/** Subset of Georaster properties */
 export type GeorasterMetadata = Pick<Georaster, 'noDataValue' | 'projection' | 'xmin' | 'ymax' | 'pixelWidth' | 'pixelHeight'>
 
 export function parseGeoraster(data: object | string | Buffer | ArrayBuffer | number[][][],

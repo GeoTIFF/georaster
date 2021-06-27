@@ -5,6 +5,7 @@
   "main": "dist/georaster.bundle.min.js",
   "browser": "./dist/georaster.browser.bundle.min.js",
   "unpkg": "./dist/georaster.browser.bundle.min.js",
+  "types": "dist/georaster.d.ts",
   "scripts": {
     "analyze": "ANALYZE_GEORASTER_BUNDLE=true npm run build",
     "clean": "rm -f ./dist/*",
