@@ -1,4 +1,3 @@
-// Matches default CJS export in index.js
 declare function parseGeoraster(
   data: object | string | Buffer | ArrayBuffer | number[][][],
   /** the raster metadata */
@@ -7,6 +6,7 @@ declare function parseGeoraster(
   debug?: boolean
 ): Promise<parseGeoraster.Georaster>;
 
+// Match default CJS export in index.js
 export = parseGeoraster;
 
 // A namespace with the same name as the default export is needed to define additional type exports
