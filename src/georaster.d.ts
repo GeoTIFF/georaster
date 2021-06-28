@@ -24,7 +24,7 @@ declare namespace parseGeoraster {
     /** raster width in pixels */
     pixelWidth: number;
     /** Projection identifier */
-    projection: unknown;
+    projection: number;
     /** left boundary, in units of projection*/
     xmin: number;
     /** right boundary, in units of projection */
