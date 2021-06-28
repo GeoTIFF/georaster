@@ -1,16 +1,17 @@
-// Matches index.js default export of this method
+// Matches default CJS export in index.js
 declare function parseGeoraster(
   data: object | string | Buffer | ArrayBuffer | number[][][],
   /** the raster metadata */
-  metadata: georaster.GeorasterMetadata,
+  metadata: parseGeoraster.GeorasterMetadata,
   /** whether or not to print debug statements */
   debug?: boolean
-): Promise<georaster.Georaster>;
+): Promise<parseGeoraster.Georaster>;
 
 export = parseGeoraster;
 
-// A namespace is needed to define additional type exports in addition to the default above
-declare namespace georaster {
+// A namespace with the same name as the default export is needed to define additional type exports
+// https://stackoverflow.com/a/51238234/4159809
+declare namespace parseGeoraster {
   export interface Georaster {
     /** raster values.  first dimension is raster band, remainder is 2D array of cell values */
     values: number[][][];
