@@ -12,6 +12,16 @@ export = parseGeoraster;
 // A namespace with the same name as the default export is needed to define additional type exports
 // https://stackoverflow.com/a/51238234/4159809
 declare namespace parseGeoraster {
+  export interface ValuesOptions {
+    left: number
+    top: number
+    right: number
+    bottom: number
+    width: number
+    height: number
+    resampleMethod: 'nearest' | 'bilinear'
+  }
+  
   export interface Georaster {
     /** raster values.  first dimension is raster band, remainder is 2D array of cell values */
     values: number[][][];
@@ -29,9 +39,9 @@ declare namespace parseGeoraster {
     xmin: number;
     /** right boundary, in units of projection */
     xmax: number;
-    /** top boundary (image y-axis is inverse of cartesian), in units of projection */
+    /** bottom boundary, in units of projection */
     ymin: number;
-    /** bottom boundary (image y-axis is inverse of cartesian), in units of projection */
+    /** top boundary, in units of projection */
     ymax: number;
     /** cell value representing "no data" in raster */
     noDataValue: number;
@@ -43,6 +53,10 @@ declare namespace parseGeoraster {
     maxs: number[];
     /** difference between max and min for each raster band.  Indexed by band number */
     ranges: number[];
+    /** if raster initialized with a URL, this method is available to fetch a specific subset without reading entire raster into memory.  Useful for COGs */
+    getValues: (options: ValuesOptions) => number[][][];
+    /** experimental! returns a canvas picture of the data. */
+    toCanvas: (options: { height?: number; width?: number }) => ImageData
   }
 
   export type GeorasterMetadata = Pick<
