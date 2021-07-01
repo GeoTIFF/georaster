@@ -54,7 +54,7 @@ declare namespace parseGeoraster {
     /** difference between max and min for each raster band.  Indexed by band number */
     ranges: number[];
     /** if raster initialized with a URL, this method is available to fetch a specific subset without reading entire raster into memory.  Useful for COGs */
-    getValues: (options: ValuesOptions) => number[][][];
+    getValues?: (options: ValuesOptions) => number[][][];
     /** experimental! returns a canvas picture of the data. */
     toCanvas: (options: { height?: number; width?: number }) => ImageData
   }
