@@ -12,19 +12,21 @@ export = parseGeoraster;
 // A namespace with the same name as the default export is needed to define additional type exports
 // https://stackoverflow.com/a/51238234/4159809
 declare namespace parseGeoraster {
-  export interface ValuesOptions {
-    /** pixels from the left of the image to skip before start clipping */
+  /** defines the new raster image to generate as a window in the source raster image.  Resolution (cell size) is determined from this */
+  export interface WindowOptions {
+    /** left side of the image window in pixel coordinates */
     left: number
-    /** how many pixels from the top of the image to skip before start clipping */
+    /** top of the image window in pixel coordinates */
     top: number
-    /** how many pixels from the right of the image to skip before start clipping */
+    /** right of the image window in pixel coordinates.  Should be greater than left */
     right: number
-    /** how many pixels from the bottom of the image to skip before start clipping */
+    /** bottom of the image window in pixel coordinates.  Should be greater than top */
     bottom: number
-    /** width in pixels to make the resulting image */
+    /** width in pixels to make the resulting raster.  Will resample and/or use overview if not same as right - left */
     width: number
-    /** height in pixels to make the resulting image */
+    /** height in pixels to make the resulting raster.  Will resample and/or use overview if not same as bottom - top */
     height: number
+    /** method to map src raster values to result raster. Supports 'nearest' neighbor, defaults to 'bilinear' */
     resampleMethod?: string
   }
   
@@ -59,8 +61,12 @@ declare namespace parseGeoraster {
     maxs: number[];
     /** difference between max and min for each raster band.  Indexed by band number */
     ranges: number[];
-    /** if raster initialized with a URL, this method is available to fetch a specific subset without reading entire raster into memory.  Useful for COGs */
-    getValues?: (options: ValuesOptions) => Promise<number[][][]>;
+    /** if raster initialized with a URL, this method is available to fetch a
+     * specific subset or 'window' without reading the entire raster into memory.
+     * If the window options do not align exactly with the source image then a new
+     * one is generated using the resampleMethod.  The best available overview will
+     * also be used if they are available. */
+    getValues?: (options: WindowOptions) => Promise<number[][][]>;
     /** experimental! returns a canvas picture of the data. */
     toCanvas: (options: { height?: number; width?: number }) => ImageData
   }
