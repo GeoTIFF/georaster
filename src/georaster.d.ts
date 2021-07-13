@@ -1,7 +1,7 @@
 declare function parseGeoraster(
   data: object | string | Buffer | ArrayBuffer | number[][][],
   /** the raster metadata */
-  metadata: parseGeoraster.GeorasterMetadata,
+  metadata?: parseGeoraster.GeorasterMetadata,
   /** whether or not to print debug statements */
   debug?: boolean
 ): Promise<parseGeoraster.Georaster>;
@@ -19,7 +19,7 @@ declare namespace parseGeoraster {
     bottom: number
     width: number
     height: number
-    resampleMethod: 'nearest' | 'bilinear'
+    resampleMethod?: 'nearest' | 'bilinear'
   }
   
   export interface Georaster {
@@ -54,7 +54,7 @@ declare namespace parseGeoraster {
     /** difference between max and min for each raster band.  Indexed by band number */
     ranges: number[];
     /** if raster initialized with a URL, this method is available to fetch a specific subset without reading entire raster into memory.  Useful for COGs */
-    getValues?: (options: ValuesOptions) => number[][][];
+    getValues?: (options: ValuesOptions) => Promise<number[][][]>;
     /** experimental! returns a canvas picture of the data. */
     toCanvas: (options: { height?: number; width?: number }) => ImageData
   }
