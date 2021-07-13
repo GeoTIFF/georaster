@@ -13,13 +13,19 @@ export = parseGeoraster;
 // https://stackoverflow.com/a/51238234/4159809
 declare namespace parseGeoraster {
   export interface ValuesOptions {
+    /** pixels from the left of the image to skip before start clipping */
     left: number
+    /** how many pixels from the top of the image to skip before start clipping */
     top: number
+    /** how many pixels from the right of the image to skip before start clipping */
     right: number
+    /** how many pixels from the bottom of the image to skip before start clipping */
     bottom: number
+    /** width in pixels to make the resulting image */
     width: number
+    /** height in pixels to make the resulting image */
     height: number
-    resampleMethod?: 'nearest' | 'bilinear'
+    resampleMethod?: string
   }
   
   export interface Georaster {
