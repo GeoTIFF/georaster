@@ -1,6 +1,19 @@
+/** Typed array of data values, the basic building block of a georaster  */
+type TypedArray =
+  | number[]
+  | Uint8Array
+  | Int8Array
+  | Uint16Array
+  | Int16Array
+  | Uint32Array
+  | Int32Array
+  | Float32Array
+  | Float64Array;
+
 declare function parseGeoraster(
-  data: object | string | Buffer | ArrayBuffer | number[][][],
-  /** the raster metadata */
+  /** raster pixel data, accepts variety of forms */
+  data: object | string | Buffer | ArrayBuffer | TypedArray[][],
+  /** raster metadata */
   metadata?: parseGeoraster.GeorasterMetadata,
   /** whether or not to print debug statements */
   debug?: boolean
@@ -31,8 +44,8 @@ declare namespace parseGeoraster {
   }
   
   export interface Georaster {
-    /** raster values.  first dimension is raster band, remainder is 2D array of cell values */
-    values: number[][][];
+    /** raster values for one or more bands.  Represented as [band, column, row] */
+    values: TypedArray[][];
     /** raster height in units of projection */
     height: number;
     /** raster width in units of projection */
@@ -66,7 +79,7 @@ declare namespace parseGeoraster {
      * If the window options do not align exactly with the source image then a new
      * one is generated using the resampleMethod.  The best available overview will
      * also be used if they are available. */
-    getValues?: (options: WindowOptions) => Promise<number[][][]>;
+    getValues?: (options: WindowOptions) => Promise<TypedArray[][]>;
     /** experimental! returns a canvas picture of the data. */
     toCanvas: (options: { height?: number; width?: number }) => ImageData
   }
