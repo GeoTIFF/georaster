@@ -20,7 +20,7 @@ declare function parseGeoraster(
 ): Promise<parseGeoraster.Georaster>;
 
 // Match default CJS export in index.js
-export = parseGeoraster;
+export default parseGeoraster;
 
 // A namespace with the same name as the default export is needed to define additional type exports
 // https://stackoverflow.com/a/51238234/4159809

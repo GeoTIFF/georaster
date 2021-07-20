@@ -1,7 +1,12 @@
-// Tests use of Typescript types
+/*
+ * Tests Typescript declaration file.  Compile and run this with the 'test-types' command
+ * Imports georaster from top-level package, just as downstream Typescript consumer of this library would.
+ * This way the 'main' JS build distribution and 'types' property in package.json are imported and not the underlying source.
+ * Assumes top-level folder containing repo is named 'georaster' and build script has been run 
+ */
 
 import { assert } from "console";
-import parseGeoraster from "../src";
+import parseGeoraster from "../../georaster";
 import { countIn2D } from "../src/utils";
 
 // Floating point number values
@@ -66,6 +71,7 @@ parseGeoraster(raster_url).then(georaster => {
       width: 10,
       height: 10
     };
+    if (!georaster.getValues) throw new Error('georaster configured without URL')
     georaster.getValues(options).then(values => {
       const numBands = values.length;
       const numRows = values[0].length;
