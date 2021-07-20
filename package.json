@@ -5,7 +5,7 @@
   "main": "dist/georaster.bundle.min.js",
   "browser": "./dist/georaster.browser.bundle.min.js",
   "unpkg": "./dist/georaster.browser.bundle.min.js",
-  "types": "dist/georaster.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "analyze": "ANALYZE_GEORASTER_BUNDLE=true npm run build",
     "clean": "rm -f ./dist/*",
@@ -22,7 +22,7 @@
     "build:prod": "npm run build:prod:node && npm run build:prod:web",
     "build:prod:node": "webpack --mode production --target node",
     "build:prod:web": "webpack --mode production --target web",
-    "build:types": "cp src/georaster.d.ts dist/georaster.d.ts"
+    "build:types": "cp src/index.d.ts dist/index.d.ts"
   },
   "repository": {
     "type": "git",

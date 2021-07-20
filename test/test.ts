@@ -1,7 +1,7 @@
 // Tests use of Typescript types, requires build to already be done into dist
 
 import { assert } from "console";
-import parseGeoraster from "../../georaster";  // Import from outside to utilize dist and types pointer in package.json
+import parseGeoraster from "../src";  // Import from outside to utilize dist and types pointer in package.json
 import { countIn2D } from "../src/utils";
 
 // Floating point number values
