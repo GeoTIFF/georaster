@@ -1,12 +1,8 @@
-/*
- * Tests Typescript declaration file.  Compile and run this with the 'test-types' command
- * Imports georaster from top-level package, just as downstream Typescript consumer of this library would.
- * This way the 'main' JS build distribution and 'types' property in package.json are imported and not the underlying source.
- * Assumes top-level folder containing repo is named 'georaster' and build script has been run 
- */
+// Internal test of Typescript types.  Imports from src not dist.
+// downstream TS users of geotiff should simply import the geotiff library and will get types along with the dist build
 
 import { assert } from "console";
-import parseGeoraster from "../../georaster";
+import parseGeoraster from "../src";
 import { countIn2D } from "../src/utils";
 
 // Floating point number values
