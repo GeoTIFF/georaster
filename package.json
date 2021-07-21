@@ -16,7 +16,7 @@
     "test-all": "npm run test-dev && npm run test-prod",
     "test-dev": "npm run dev && GEORASTER_TEST_BUNDLE_NAME='georaster.bundle.js' node ./node_modules/.bin/mocha --reporter spec",
     "test-prod": "npm run build && GEORASTER_TEST_BUNDLE_NAME='georaster.bundle.min.js' node ./node_modules/.bin/mocha --reporter spec",
-    "test-types": "npx ts-node --compiler-options '{\"esModuleInterop\":true, \"module\":\"commonjs\"}' test/test.ts",
+    "test-types": "tsc test/types.ts --noEmit",
     "dev": "webpack --mode development --target node && webpack --mode development --target web",
     "build": "npm run build:prod && npm run build:types",
     "build:prod": "npm run build:prod:node && npm run build:prod:web",
@@ -46,7 +46,7 @@
   "dependencies": {
     "cross-fetch": "^3.0.4",
     "georaster-to-canvas": "0.2.0",
-    "geotiff": "1.0.0-beta.13",
+    "geotiff": "file://../geotiff",
     "geotiff-palette": "0.0.0",
     "threads": "^1.4.0",
     "tiny-worker": "^2.3.0",
