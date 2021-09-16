@@ -1,41 +1,39 @@
-function countIn1D(array) {
-  return array.reduce((counts, value) => {
-    if (counts[value] === undefined) {
-      counts[value] = 1;
-    } else {
-      counts[value]++;
-    }
-    return counts;
-  }, {});
-}
+const { fetch } = require('cross-fetch');
 
-function countIn2D(rows) {
-  return rows.reduce((counts, values) => {
-    values.forEach(value => {
-      if (counts[value] === undefined) {
-        counts[value] = 1;
-      } else {
-        counts[value]++;
-      }
-    });
-    return counts;
-  }, {});
-}
 
-/*
-Takes in a flattened one dimensional array
-representing two-dimensional pixel values
-and returns an array of arrays.
-*/
-function unflatten(valuesInOneDimension, size) {
-  const {height, width} = size;
-  const valuesInTwoDimensions = [];
-  for (let y = 0; y < height; y++) {
-    const start = y * width;
-    const end = start + width;
-    valuesInTwoDimensions.push(valuesInOneDimension.slice(start, end));
+function urlExists(url) {
+  try {
+    return fetch(url, {method: 'HEAD'})
+    .then(response => response.status === 200);
+  } catch (error) {
+    return false;
   }
-  return valuesInTwoDimensions;
 }
 
-module.exports = {countIn1D, countIn2D, unflatten};
+function postMessage(worker, message) {
+  // filter everything that can be transfered
+  const transfer = Object.values(message)
+    .filter(value => typeof value === 'ArrayBuffer');
+
+  worker.postMessage(message, transfer);
+}
+
+const runWorker = (Worker, message) => {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker();
+    worker.onmessage = resolve;
+    postMessage(worker, message);
+  });
+}
+
+
+function isBinary(input) {
+  return input instanceof ArrayBuffer || input instanceof Uint8Array || (typeof Buffer !== 'undefined' && Buffer.isBuffer(input));
+}
+
+module.exports = {
+  isBinary,
+  postMessage,
+  runWorker,
+  urlExists,
+}
