@@ -80,50 +80,55 @@ export default function parseData(data, debug) {
         resolve(initFunction(data.data).then(geotiff => {
           if (debug) console.log('geotiff:', geotiff);
           return geotiff.getImage().then(image => {
-            if (debug) console.log('image:', image);
+            try {
+              if (debug) console.log('image:', image);
 
-            const fileDirectory = image.fileDirectory;
+              const fileDirectory = image.fileDirectory;
 
-            const {
-              GeographicTypeGeoKey,
-              ProjectedCSTypeGeoKey,
-            } = image.getGeoKeys();
+              const {
+                GeographicTypeGeoKey,
+                ProjectedCSTypeGeoKey,
+              } = image.getGeoKeys();
 
-            result.projection = GeographicTypeGeoKey || ProjectedCSTypeGeoKey;
-            if (debug) console.log('projection:', result.projection);
+              result.projection = GeographicTypeGeoKey || ProjectedCSTypeGeoKey;
+              if (debug) console.log('projection:', result.projection);
 
-            result.height = height = image.getHeight();
-            if (debug) console.log('result.height:', result.height);
-            result.width = width = image.getWidth();
-            if (debug) console.log('result.width:', result.width);
+              result.height = height = image.getHeight();
+              if (debug) console.log('result.height:', result.height);
+              result.width = width = image.getWidth();
+              if (debug) console.log('result.width:', result.width);
 
-            const [resolutionX, resolutionY] = image.getResolution();
-            result.pixelHeight = Math.abs(resolutionY);
-            result.pixelWidth = Math.abs(resolutionX);
+              const [resolutionX, resolutionY] = image.getResolution();
+              result.pixelHeight = Math.abs(resolutionY);
+              result.pixelWidth = Math.abs(resolutionX);
 
-            const [originX, originY] = image.getOrigin();
-            result.xmin = originX;
-            result.xmax = result.xmin + width * result.pixelWidth;
-            result.ymax = originY;
-            result.ymin = result.ymax - height * result.pixelHeight;
+              const [originX, originY] = image.getOrigin();
+              result.xmin = originX;
+              result.xmax = result.xmin + width * result.pixelWidth;
+              result.ymax = originY;
+              result.ymin = result.ymax - height * result.pixelHeight;
 
-            result.noDataValue = fileDirectory.GDAL_NODATA ? parseFloat(fileDirectory.GDAL_NODATA) : null;
+              result.noDataValue = fileDirectory.GDAL_NODATA ? parseFloat(fileDirectory.GDAL_NODATA) : null;
 
-            result.numberOfRasters = fileDirectory.SamplesPerPixel;
+              result.numberOfRasters = fileDirectory.SamplesPerPixel;
 
-            if (fileDirectory.ColorMap) {
-              result.palette = getPalette(image);
-            }
+              if (fileDirectory.ColorMap) {
+                result.palette = getPalette(image);
+              }
 
-            if (data.sourceType !== 'url') {
-              return image.readRasters().then(rasters => {
-                result.values = rasters.map(valuesInOneDimension => {
-                  return unflatten(valuesInOneDimension, {height, width});
+              if (data.sourceType !== 'url') {
+                return image.readRasters().then(rasters => {
+                  result.values = rasters.map(valuesInOneDimension => {
+                    return unflatten(valuesInOneDimension, {height, width});
+                  });
+                  return processResult(result);
                 });
-                return processResult(result);
-              });
-            } else {
-              return result;
+              } else {
+                return result;
+              }
+            } catch (error) {
+              reject(error);
+              console.error('[georaster] error parsing georaster:', error);
             }
           });
         }));
