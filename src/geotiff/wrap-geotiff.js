@@ -1,15 +1,22 @@
 import GeoTIFFfrom from "geotiff-from";
+import calcStatsFn from "calc-stats";
+import flatIter from "flat-iter";
 // import toCanvas from "georaster-to-canvas";
 import { Worker } from "universal-worker";
-import xdim from "xdim";
 import { runOnlyOnce } from "worker-fns";
+import writeImage from "write-image";
+import xdim from "xdim";
 
 import addLegacyFields from "../add-legacy-fields.js";
 import addLegacyFns from "../add-legacy-fns.js";
 import addSaveFunctions from "../add-save-funcs.js";
 import checkByteLength from "../checkers/check-byte-length.js";
 import merge from "../merge.js";
+import normalizeExportFormat from "../normalize-export-format.js";
 import preprocess from "../preprocess.js";
+import saveAux from "../savers/save-aux.js";
+import saveWorldFile from "../savers/save-world-file.js";
+import stretchFn from "../stretch.js";
 import resize from "../resize.js";
 
 /**
@@ -189,6 +196,134 @@ export default async function wrapGeoTIFF() {
         }
 
         return { values, actual_height, actual_width, iamge_index: selected_image_index, width: result_width, height: result_height };
+    };
+
+    georaster.save = async function save({
+        debugLevel,
+        format,
+        height,
+        width,
+        left = 0,
+        right = 0,
+        top = 0,
+        bottom = 0,
+        quality,
+        stretch = true,
+        calcStats,
+        ...rest
+    } = {}) {
+        if (!format) throw new Error("[georaster] can't save without a format");
+
+        format = normalizeExportFormat(format);
+        if (debugLevel >= 1) console.log(`[georaster] saving as "${format}"`);
+
+        // treat nullish values as zero
+        (left ??= 0), (right ??= 0), (top ??= 0), (bottom ??= 0);
+
+        // handle sizes expressed as %
+        if (typeof height === "string" && height.endsWith("%")) height = Math.round(georaster.height * (Number(height.replace("%", "")) / 100));
+        if (typeof width === "string" && width.endsWith("%")) width = Math.round(georaster.width * (Number(width.replace("%", "")) / 100));
+        if (typeof left === "string" && left.endsWith("%")) left = Math.round(georaster.width * (Number(left.replace("%", "")) / 100));
+        if (typeof right === "string" && right.endsWith("%")) right = Math.round(georaster.width * (Number(right.replace("%", "")) / 100));
+        if (typeof top === "string" && top.endsWith("%")) top = Math.round(georaster.height * (Number(top.replace("%", "")) / 100));
+        if (typeof bottom === "string" && bottom.endsWith("%")) bottom = Math.round(georaster.height * (Number(bottom.replace("%", "")) / 100));
+
+        const result = {
+            files: {}
+        };
+
+        if (["asc", "prj"].includes(format)) {
+            if (georaster.srs?.wkt) {
+                result.files[".prj"] = georaster.srs?.wkt;
+            }
+        }
+
+        // save world file
+        [
+            ["jpg", ".jgw"],
+            ["png", ".pgw"],
+            ["geotiff", ".tfw"]
+        ].forEach(([f, ext]) => {
+            if (format === f) {
+                result.files[ext] = saveWorldFile({ georaster, left, top });
+                if (debugLevel >= 1) console.log(`[georaster] saved world file`);
+            }
+        });
+
+        let actual_height = georaster.height - top - bottom;
+        if (debugLevel >= 1) console.log("[georaster] actual height:", actual_height);
+        let actual_width = georaster.width - left - right;
+        if (debugLevel >= 1) console.log("[georaster] actual width:", actual_width);
+
+        width ??= actual_width;
+        height ??= actual_height;
+        const resize = height !== actual_height || width !== actual_width;
+
+        let values = await georaster.getValues({ height, width, layout: "[band][row][column]", left, top, right, bottom, ...rest });
+
+        if (["aux", "auxxml", "jpg", "png", "tif"].includes(format)) {
+            result.files[".aux.xml"] = saveAux({ georaster, values });
+        }
+
+        if (["jpg", "png"].includes(format)) {
+            if (georaster.palette) {
+                if (debugLevel >= 1) console.log("[georaster] using palette");
+                const { palette } = georaster;
+                values = values.flat(Infinity).map(value => palette[value]);
+                if (debugLevel >= 1) console.log("[georaster] after applying paletter, values are:", values.slice(0, 10), "...");
+            } else if (georaster.pixelDepth === 1) {
+                if (debugLevel >= 1) console.log("[georaster] pixel depth is 1");
+                let min, max;
+                if (stretch) {
+                    if (debugLevel >= 1) console.log("[georaster] stretching");
+                    // filter out no data values
+                    ({ min, max } = calcStatsFn(
+                        flatIter(values, Infinity), // only 1 band
+                        {
+                            calcHistogram: false,
+                            calcMax: true,
+                            calcMean: false,
+                            calcMedian: false,
+                            calcMin: true,
+                            calcMode: false,
+                            calcModes: false,
+                            calcSum: false
+                        }
+                    ));
+                } else {
+                    if (!georaster.stats) {
+                        if (debugLevel >= 1)
+                            console.warn(
+                                "[georaster] you are trying to save a GeoTIFF, but we dont' have the statistics calculated, so let's grab the coarsest image and calc min/max on that"
+                            );
+                        // create array to hold images if it's not already created
+                        georaster._images ??= new Array(await geotiff.getImageCount());
+                        const last = georaster._images.length - 1;
+                        const image = (georaster._images[last] ??= georaster._geotiff.getImage(last));
+                        georaster.stats = await getStats(image, { debug: debugLevel >= 2, enough: ["min", "max"] });
+                    }
+                    ({ min, max } = georaster.stats.bands[0]);
+                }
+
+                values = stretchFn(values.flat(Infinity), { noData: georaster.noDataValue, min, max, strategy: format });
+            } else if (pixelDepth === 2) {
+                throw new Error(
+                    "[georaster] georaster doesn't currently support 2-band imagery.  Please file a ticket here: https://github.com/geotiff/georaster/issues"
+                );
+            }
+            const { data: buf } = writeImage({
+                data: values,
+                debug: debugLevel >= 2,
+                format,
+                height,
+                width,
+                quality
+            });
+            if (buf.byteLength < 100) throw new Error("[georaster] uh oh. wrote really small buffer. that's not right.");
+            result.files["." + format] = await toab(buf);
+        }
+
+        return result;
     };
 
     return georaster;
