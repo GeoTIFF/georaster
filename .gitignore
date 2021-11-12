@@ -58,21 +58,19 @@ typings/
 .env
 
 
-# swap files
-*.swo
-*.swn
-*.swp
-
 # backup files
-*.bak
+*bak*
 
 # lock files
 package-lock.json
+pnpm-lock.yaml
 
 # swap files
 *.swl
 *.swm
 *.swn
+*.swo
+*.swp
 
 # test data files
 data/geonode_atlanteil.tif
@@ -80,4 +78,16 @@ data/*.json
 data/*.xml
 data/rgb_raster.tif
 data/*.tif
+data/*.TIF
 stats.json
+*bak*
+*tmp*
+*.txt
+*.zip
+.DS_Store
+out
+/*.asc
+/*.aux.xml
+/*.png
+/*.jpg
+/*.tif
