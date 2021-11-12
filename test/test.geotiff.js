@@ -5,14 +5,16 @@ import test from "flug";
 import parseGeoTIFF from "../src/geotiff/parse-geotiff.js";
 import wrapGeoTIFF from "../src/geotiff/wrap-geotiff.js";
 
-test("Parse OSGEO Sample Raster", async ({ eq }) => {
+import { displayAndWriteImage } from "./utils.js";
+
+test("parseGeoTIFF", async ({ eq }) => {
     const data = findAndRead("GeogToWGS84GeoKey5.tif");
     const georaster = await parseGeoTIFF({ data, calcStats: true, debugLevel: 0 });
     eq(georaster.pixelDepth, 1);
     eq(georaster.srs.code, 32767);
 });
 
-test("Wrap OSGEO Sample Raster", async ({ eq }) => {
+test("OSGEO Sample Raster", async ({ eq }) => {
     const data = findAndRead("GeogToWGS84GeoKey5.tif");
     const georaster = await wrapGeoTIFF({ data, calcStats: true, debugLevel: 0 });
     eq(georaster.pixelDepth, 1);
@@ -21,10 +23,39 @@ test("Wrap OSGEO Sample Raster", async ({ eq }) => {
     const values = await georaster.getValues();
     eq(values[0].length, georaster.height);
     eq(values[0][0].length, georaster.width);
+
+    // save the same back
+    {
+        const result = await georaster.save({ format: "tif" });
+        eq(result.files[".tfw"], "0.0000277777778\n0\n0\n-0.0000277777778\n9.0010712684889\n52.0013621190111\n");
+        // await displayAndWriteImage("GeogToWGS84GeoKey5-resaved.tif", { data: result.files['.tif'] });
+    }
+
+    {
+        // using color palette
+        const result = await georaster.save({ debugLevel: 2, format: "jpg" });
+        eq(
+            result.files[".aux.xml"],
+            `<PAMDataset>\n  <PAMRasterBand band="0">\n    <Metadata>\n      <MDI key="STATISTICS_MAXIMUM">2</MDI>\n      <MDI key="STATISTICS_MEAN">1.796588569748064</MDI>\n      <MDI key="STATISTICS_MINIMUM">0</MDI>\n    </Metadata>\n  </PAMRasterBand>\n</PAMDataset>`
+        );
+        eq(result.files[".jgw"], "0.0000277777778\n0\n0\n-0.0000277777778\n9.0010712684889\n52.0013621190111\n");
+        await displayAndWriteImage("GeogToWGS84GeoKey5.jpg", { data: result.files[".jpg"] });
+    }
+
+    {
+        // grabbing top left using color palette
+        const result = await georaster.save({ debugLevel: 2, right: "50%", bottom: "50%", format: "png" });
+        eq(
+            result.files[".aux.xml"],
+            `<PAMDataset>\n  <PAMRasterBand band="0">\n    <Metadata>\n      <MDI key="STATISTICS_MAXIMUM">2</MDI>\n      <MDI key="STATISTICS_MEAN">1.716</MDI>\n      <MDI key="STATISTICS_MINIMUM">0</MDI>\n    </Metadata>\n  </PAMRasterBand>\n</PAMDataset>`
+        );
+        eq(result.files[".pgw"], "0.0000277777778\n0\n0\n-0.0000277777778\n9.0010712684889\n52.0013621190111\n");
+        await displayAndWriteImage("GeogToWGS84GeoKey5.png", { data: result.files[".png"] });
+    }
 });
 
 // Using tiff created from http://geomap.arpa.veneto.it/geoserver/wcs?crs=EPSG%3A4326&service=WCS&format=GeoTIFF&request=GetCoverage&height=329&width=368&version=1.0.0&BBox=9.679858245722988%2C13.951082737884812%2C44.183855724634675%2C47.38727409375604&Coverage=geonode%3Aatlanteil
-test("should parse GeoNode WCS Export Correctly", async ({ eq }) => {
+test("GeoNode WCS Export", async ({ eq }) => {
     const data = findAndRead("geonode_atlanteil.tif");
     const georaster = await wrapGeoTIFF({ data, debugLevel: 0 });
     eq(georaster.xmin, 10.2822923743907);
@@ -39,6 +70,26 @@ test("should parse GeoNode WCS Export Correctly", async ({ eq }) => {
     eq(values[0][0].length, 368);
     eq(georaster.maxs[0], 5.398769378662109);
     eq(georaster.mins[0], 0);
+
+    {
+        const result = await georaster.save({ debugLevel: 2, format: "jpg", left: "10%", right: "10%" });
+        eq(
+            result.files[".aux.xml"],
+            `<PAMDataset>\n  <PAMRasterBand band="0">\n    <Metadata>\n      <MDI key="STATISTICS_MAXIMUM">5.398769378662109</MDI>\n      <MDI key="STATISTICS_MEAN">0.28421803832819714</MDI>\n      <MDI key="STATISTICS_MINIMUM">0</MDI>\n    </Metadata>\n  </PAMRasterBand>\n</PAMDataset>`
+        );
+        eq(result.files[".jgw"], "0.008332489768550002\n0\n0\n-0.008310294021089992\n9.978966642620914\n47.14845312865412\n");
+        await displayAndWriteImage("geonode_atlanteil.jpg", { data: result.files[".jpg"] });
+    }
+
+    {
+        const result = await georaster.save({ debugLevel: 2, format: "png" });
+        eq(
+            result.files[".aux.xml"],
+            `<PAMDataset>\n  <PAMRasterBand band="0">\n    <Metadata>\n      <MDI key="STATISTICS_MAXIMUM">5.398769378662109</MDI>\n      <MDI key="STATISTICS_MEAN">0.23088013798911844</MDI>\n      <MDI key="STATISTICS_MINIMUM">0</MDI>\n    </Metadata>\n  </PAMRasterBand>\n</PAMDataset>`
+        );
+        eq(result.files[".pgw"], "0.008332489768550002\n0\n0\n-0.008310294021089992\n10.286447521401245\n47.14845312865412\n");
+        await displayAndWriteImage("geonode_atlanteil.png", { data: result.files[".png"] });
+    }
 });
 
 test("parsing RGB raster", async ({ eq }) => {
