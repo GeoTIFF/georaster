@@ -90,7 +90,7 @@ export default function parseData(data, debug) {
                 ProjectedCSTypeGeoKey,
               } = image.getGeoKeys();
 
-              result.projection = GeographicTypeGeoKey || ProjectedCSTypeGeoKey;
+              result.projection = ProjectedCSTypeGeoKey || GeographicTypeGeoKey;
               if (debug) console.log('projection:', result.projection);
 
               result.height = height = image.getHeight();
