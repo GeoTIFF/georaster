@@ -59,6 +59,10 @@ class GeoRaster {
       this._url = data;
       this.rasterType = 'geotiff';
       this.sourceType = 'url';
+    } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
+      this._data = data;
+      this.rasterType = 'geotiff';
+      this.sourceType = 'Blob';
     } else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) {
       // this is node
       if (debug) console.log('data is a buffer');
