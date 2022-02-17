@@ -1,4 +1,4 @@
-import {fromArrayBuffer, fromUrl} from 'geotiff';
+import {fromArrayBuffer, fromUrl, fromBlob} from 'geotiff';
 import {getPalette} from 'geotiff-palette';
 import {unflatten} from './utils.js';
 
@@ -74,6 +74,8 @@ export default function parseData(data, debug) {
         let initFunction = fromArrayBuffer;
         if (data.sourceType === 'url') {
           initFunction = fromUrl;
+        } else if (data.sourceType === 'Blob') {
+          initFunction = fromBlob;
         }
 
         if (debug) console.log('data.rasterType is geotiff');
