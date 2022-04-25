@@ -2,8 +2,7 @@
 /* global Blob */
 /* global URL */
 
-import fetch from 'cross-fetch';
-import Worker from './worker.js';
+import Worker from 'web-worker:./worker.js';
 import parseData from './parseData.js';
 import {unflatten} from './utils.js';
 import {fromUrl, fromUrls} from 'geotiff';
@@ -175,7 +174,7 @@ class GeoRaster {
   }
 }
 
-const parseGeoraster = (input, metadata, debug) => {
+export const parseGeoraster = (input, metadata, debug) => {
   if (debug) console.log('starting parseGeoraster with ', input, metadata);
 
   if (input === undefined) {
@@ -185,16 +184,3 @@ const parseGeoraster = (input, metadata, debug) => {
 
   return new GeoRaster(input, metadata, debug).initialize(debug);
 };
-
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = parseGeoraster;
-}
-
-/*
-    The following code allows you to use GeoRaster without requiring
-*/
-if (typeof window !== 'undefined') {
-  window['parseGeoraster'] = parseGeoraster;
-} else if (typeof self !== 'undefined') {
-  self['parseGeoraster'] = parseGeoraster; // jshint ignore:line
-}

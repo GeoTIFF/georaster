@@ -1,4 +1,4 @@
-function countIn1D(array) {
+export function countIn1D(array) {
   return array.reduce((counts, value) => {
     if (counts[value] === undefined) {
       counts[value] = 1;
@@ -9,7 +9,7 @@ function countIn1D(array) {
   }, {});
 }
 
-function countIn2D(rows) {
+export function countIn2D(rows) {
   return rows.reduce((counts, values) => {
     values.forEach(value => {
       if (counts[value] === undefined) {
@@ -27,7 +27,7 @@ Takes in a flattened one dimensional array
 representing two-dimensional pixel values
 and returns an array of arrays.
 */
-function unflatten(valuesInOneDimension, size) {
+export function unflatten(valuesInOneDimension, size) {
   const {height, width} = size;
   const valuesInTwoDimensions = [];
   for (let y = 0; y < height; y++) {
@@ -37,5 +37,3 @@ function unflatten(valuesInOneDimension, size) {
   }
   return valuesInTwoDimensions;
 }
-
-module.exports = {countIn1D, countIn2D, unflatten};

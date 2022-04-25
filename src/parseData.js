@@ -2,7 +2,7 @@ import {fromArrayBuffer, fromUrl, fromBlob} from 'geotiff';
 import {getPalette} from 'geotiff-palette';
 import {unflatten} from './utils.js';
 
-function processResult(result, debug) {
+export function processResult(result, debug) {
   const noDataValue = result.noDataValue;
   const height = result.height;
   const width = result.width;

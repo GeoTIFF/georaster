@@ -1,7 +1,6 @@
-const findTagByPath = require('xml-utils/src/find-tag-by-path');
+import findTagByPath from 'xml-utils/src/find-tag-by-path.js';
 
-
-const parseISO = metadata => {
+export default function parseISO(metadata) {
   const results = {};
 
   try {
@@ -20,8 +19,4 @@ const parseISO = metadata => {
   }
 
   return results;
-};
-
-module.exports = {
-  parseISO,
 };
