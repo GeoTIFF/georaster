@@ -44,7 +44,7 @@ export default [
       inline: true,
     }),
   ]),
-  output('src/index.js', 'dist/jsbundle/georaster.bundle.js', 'umd', [
+  output('src/index.js', 'dist/georaster.browser.bundle.js', 'umd', [
     alias({
       entries: [
         { find: 'geotiff', replacement: 'node_modules/geotiff/dist-browser/geotiff.js' }
@@ -57,7 +57,7 @@ export default [
       inline: true,
     }),
   ]),
-  output('src/index.js', 'dist/jsbundle/georaster.bundle.min.js', 'umd', [
+  output('src/index.js', 'dist/georaster.browser.bundle.min.js', 'umd', [
     alias({
       entries: [
         { find: 'geotiff', replacement: 'node_modules/geotiff/dist-browser/geotiff.js' }
