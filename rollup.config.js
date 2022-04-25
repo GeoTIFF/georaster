@@ -8,6 +8,7 @@ const output = (input, file, format, plugins) => ({
   input,
   output: {
     name: 'GeoRaster',
+    sourcemap: true,
     format,
     file,
   },
@@ -19,28 +20,28 @@ export default [
     commonjs(),
     webWorkerLoader({
       targetPlatform: 'node',
-      inline: false,
+      inline: true,
     }),
   ]),
   output('src/index.node.js', 'dist/node/georaster.js', 'cjs', [
     commonjs(),
     webWorkerLoader({
       targetPlatform: 'node',
-      inline: false,
+      inline: true,
     }),
   ]),
   output('src/index.js', 'dist/js/georaster.js', 'cjs', [
     commonjs(),
     webWorkerLoader({
       targetPlatform: 'browser',
-      inline: false,
+      inline: true,
     }),
   ]),
   output('src/index.js', 'dist/es/georaster.js', 'es', [
     commonjs(),
     webWorkerLoader({
       targetPlatform: 'browser',
-      inline: false,
+      inline: true,
     }),
   ]),
   output('src/index.js', 'dist/jsbundle/georaster.bundle.js', 'umd', [
@@ -53,7 +54,7 @@ export default [
     commonjs(),
     webWorkerLoader({
       targetPlatform: 'browser',
-      inline: false,
+      inline: true,
     }),
   ]),
   output('src/index.js', 'dist/jsbundle/georaster.bundle.min.js', 'umd', [
@@ -66,7 +67,7 @@ export default [
     commonjs(),
     webWorkerLoader({
       targetPlatform: 'browser',
-      inline: false,
+      inline: true,
     }),
     terser()
   ]),
