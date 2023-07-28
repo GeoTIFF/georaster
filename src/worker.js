@@ -8,8 +8,14 @@ onmessage = e => {
   const data = e.data;
   parseData(data).then(result => {
     let transferBuffers = [];
-    if ( result.values && (result.values[0][0].buffer instanceof ArrayBuffer) ) {
-        transferBuffers = result.values.flat().map(r => r.buffer);
+    if ( result.values ) {
+      let last;
+      result.values.forEach(a => a.forEach(({ buffer }) => {
+        if (buffer instanceof ArrayBuffer && buffer !== last) {
+          transferBuffers.push(buffer);
+          last = buffer;
+        }
+      }));
     }
     if (result._data instanceof ArrayBuffer) {
       transferBuffers.push(result._data);
