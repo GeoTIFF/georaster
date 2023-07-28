@@ -44,7 +44,7 @@ class GeoRaster {
   constructor(data, metadata, debug) {
     if (debug) console.log('starting GeoRaster.constructor with', data, metadata);
 
-    this._web_worker_is_available = typeof window !== 'undefined' && window.Worker !== 'undefined';
+    this._web_worker_is_available = typeof window !== 'undefined' && typeof window.Worker !== 'undefined';
     this._blob_is_available = typeof Blob !== 'undefined';
     this._url_is_available = typeof URL !== 'undefined';
 
