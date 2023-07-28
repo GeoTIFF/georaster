@@ -74,6 +74,7 @@ class GeoRaster {
       this._data = data;
       this.rasterType = 'geotiff';
       this.sourceType = 'ArrayBuffer';
+      this._metadata = metadata;
     } else if (Array.isArray(data) && metadata) {
       this._data = data;
       this.rasterType = 'object';
