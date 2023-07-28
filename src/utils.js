@@ -23,9 +23,9 @@ function countIn2D(rows) {
 }
 
 /*
-Takes in a flattened one dimensional array
+Takes in a flattened one dimensional typed array
 representing two-dimensional pixel values
-and returns an array of arrays.
+and returns an array of typed arrays with the same buffer.
 */
 function unflatten(valuesInOneDimension, size) {
   const {height, width} = size;
@@ -33,7 +33,7 @@ function unflatten(valuesInOneDimension, size) {
   for (let y = 0; y < height; y++) {
     const start = y * width;
     const end = start + width;
-    valuesInTwoDimensions.push(valuesInOneDimension.slice(start, end));
+    valuesInTwoDimensions.push(valuesInOneDimension.subarray(start, end));
   }
   return valuesInTwoDimensions;
 }
