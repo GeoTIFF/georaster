@@ -7,10 +7,10 @@ const window = self;
 onmessage = e => {
   const data = e.data;
   parseData(data).then(result => {
-    let transferBuffers = [];
+    const transferBuffers = [];
     if ( result.values ) {
       let last;
-      result.values.forEach(a => a.forEach(({ buffer }) => {
+      result.values.forEach(a => a.forEach(({buffer}) => {
         if (buffer instanceof ArrayBuffer && buffer !== last) {
           transferBuffers.push(buffer);
           last = buffer;

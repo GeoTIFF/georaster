@@ -1,43 +1,23 @@
 import {fromArrayBuffer, fromUrl, fromBlob} from 'geotiff';
 import {getPalette} from 'geotiff-palette';
+import calcImageStats from 'calc-image-stats';
 import {unflatten} from './utils.js';
 
-function processResult(result, debug) {
-  const noDataValue = result.noDataValue;
-  const height = result.height;
-  const width = result.width;
-
-  return new Promise((resolve, reject) => {
-    result.maxs = [];
-    result.mins = [];
-    result.ranges = [];
-
-    let max; let min;
-
-    // console.log("starting to get min, max and ranges");
-    for (let rasterIndex = 0; rasterIndex < result.numberOfRasters; rasterIndex++) {
-      const rows = result.values[rasterIndex];
-      if (debug) console.log('[georaster] rows:', rows);
-
-      for (let rowIndex = 0; rowIndex < height; rowIndex++) {
-        const row = rows[rowIndex];
-
-        for (let columnIndex = 0; columnIndex < width; columnIndex++) {
-          const value = row[columnIndex];
-          if (value != noDataValue && !isNaN(value)) {
-            if (typeof min === 'undefined' || value < min) min = value;
-            else if (typeof max === 'undefined' || value > max) max = value;
-          }
-        }
-      }
-
-      result.maxs.push(max);
-      result.mins.push(min);
-      result.ranges.push(max - min);
-    }
-
-    resolve(result);
+function processResult(result) {
+  const stats = calcImageStats(result.values, {
+    height: result.height,
+    layout: '[band][row][column]',
+    noData: result.noDataValue,
+    precise: false,
+    stats: ['max', 'min', 'range'],
+    width: result.width,
   });
+
+  result.maxs = stats.bands.map(band => band.max);
+  result.mins = stats.bands.map(band => band.min);
+  result.ranges = stats.bands.map(band => band.range);
+
+  return result;
 }
 
 /* We're not using async because trying to avoid dependency on babel's polyfill
@@ -92,7 +72,7 @@ export default function parseData(data, debug) {
                 ProjectedCSTypeGeoKey,
               } = (image.getGeoKeys() || {});
 
-              result.projection = ProjectedCSTypeGeoKey || GeographicTypeGeoKey || data.metadata.projection
+              result.projection = ProjectedCSTypeGeoKey || GeographicTypeGeoKey || data.metadata.projection;
               if (debug) console.log('projection:', result.projection);
 
               result.height = height = image.getHeight();
