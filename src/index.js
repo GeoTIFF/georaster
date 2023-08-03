@@ -117,6 +117,13 @@ class GeoRaster {
         if (debug) console.log('this', this);
 
         if (this.rasterType === 'object' || this.rasterType === 'geotiff' || this.rasterType === 'tiff') {
+          const parseDataArgs = {
+            data: this._data,
+            rasterType: this.rasterType,
+            sourceType: this.sourceType,
+            readOnDemand: this.readOnDemand,
+            metadata: this._metadata,
+          };
           if (this._web_worker_is_available && ! this.readOnDemand) {
             const worker = new Worker();
             worker.onmessage = (e) => {
@@ -138,31 +145,13 @@ class GeoRaster {
             };
             if (debug) console.log('about to postMessage');
             if (this._data instanceof ArrayBuffer) {
-              worker.postMessage({
-                data: this._data,
-                rasterType: this.rasterType,
-                sourceType: this.sourceType,
-                readOnDemand: this.readOnDemand,
-                metadata: this._metadata,
-              }, [this._data]);
+              worker.postMessage(parseDataArgs, [this._data]);
             } else {
-              worker.postMessage({
-                data: this._data,
-                rasterType: this.rasterType,
-                sourceType: this.sourceType,
-                readOnDemand: this.readOnDemand,
-                metadata: this._metadata,
-              });
+              worker.postMessage(parseDataArgs);
             }
           } else {
             if (debug && ! this._web_worker_is_available) console.log('web worker is not available');
-            parseData({
-              data: this._data,
-              rasterType: this.rasterType,
-              sourceType: this.sourceType,
-              readOnDemand: this.readOnDemand,
-              metadata: this._metadata,
-            }, debug).then(result => {
+            parseData(parseDataArgs, debug).then(result => {
               if (debug) console.log('result:', result);
               if (this.readOnDemand) {
                 if (this._url) result._geotiff = geotiff;
