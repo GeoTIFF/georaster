@@ -98,7 +98,7 @@ export default function parseData(data, debug) {
                 result.palette = getPalette(image);
               }
 
-              if (data.sourceType !== 'url') {
+              if (! data.readOnDemand) {
                 return image.readRasters().then(rasters => {
                   result.values = rasters.map(valuesInOneDimension => {
                     return unflatten(valuesInOneDimension, {height, width});
@@ -106,6 +106,7 @@ export default function parseData(data, debug) {
                   return processResult(result);
                 });
               } else {
+                result._geotiff = geotiff;
                 return result;
               }
             } catch (error) {

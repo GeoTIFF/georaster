@@ -22,6 +22,18 @@ fs.readFile("data/GeogToWGS84GeoKey5.tif", (error, data) => {
 });
 ```
 
+# load from File (or other Blob) on front-end
+```javascript
+const parseGeoraster = require("georaster");
+document.querySelector("input").addEventListener("change", e => {
+  const file = e.target.files[0];
+  parseGeoraster(file)
+    .then(georaster => {
+      console.log("georaster:", georaster);
+    });
+});
+```
+
 # load from simple object on front-end
 ```javascript
 const parseGeoraster = require("georaster");
@@ -37,7 +49,8 @@ const georaster = parseGeoraster(values, metadata);
 ```
 
 # load [cloud optimized geotiff](https://www.cogeo.org/)
-This option allows you to basically load the pixels only when you need them versus the other options
+This option (and File with readOnDemand, below) allows you to basically
+load the pixels only when you need them versus the other options
 that require you to load the whole image into memory.  It will also attempt to automatically discover any available overview files.
 
 *where to clip*
@@ -70,6 +83,19 @@ that require you to load the whole image into memory.  It will also attempt to a
       console.log("clipped values are", values);
     });
   });
+```
+
+# load from File on demand
+By default, a File or ArrayBuffer will be read and parsed completely
+at full resolution in a worker thread (if available) before
+the promise returned by parseGeoraster() is resolved.
+If less data is required (such as when the file includes overviews),
+then the readOnDemand option allows reading and parsing to be deferred
+until getValues() is called.
+```javascript
+  parseGeoraster(file, { readOnDemand: true })
+    .then(georaster => georaster.getValues(options))
+    .then(values => ...
 ```
 
 # required properties

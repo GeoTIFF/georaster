@@ -53,12 +53,14 @@ class GeoRaster {
       data = new Buffer(data);
     }
 
+    this.readOnDemand = false;
     if (typeof data === 'string') {
       if (debug) console.log('data is a url');
       this._data = data;
       this._url = data;
       this.rasterType = 'geotiff';
       this.sourceType = 'url';
+      this.readOnDemand = true;
     } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
       this._data = data;
       this.rasterType = 'geotiff';
@@ -79,6 +81,9 @@ class GeoRaster {
       this._data = data;
       this.rasterType = 'object';
       this._metadata = metadata;
+    }
+    if ( metadata && metadata.readOnDemand !== undefined ) {
+      this.readOnDemand = metadata.readOnDemand;
     }
 
     if (debug) console.log('this after construction:', this);
@@ -112,7 +117,7 @@ class GeoRaster {
         if (debug) console.log('this', this);
 
         if (this.rasterType === 'object' || this.rasterType === 'geotiff' || this.rasterType === 'tiff') {
-          if (this._web_worker_is_available) {
+          if (this._web_worker_is_available && ! this.readOnDemand) {
             const worker = new Worker();
             worker.onmessage = (e) => {
               if (debug) console.log('main thread received message:', e);
@@ -120,8 +125,8 @@ class GeoRaster {
               for (const key in data) {
                 this[key] = data[key];
               }
-              if (this._url) {
-                this._geotiff = geotiff;
+              if (this.readOnDemand) {
+                if (this._url) this._geotiff = geotiff;
                 this.getValues = function(options) {
                   return getValues(this._geotiff, options);
                 };
@@ -137,6 +142,7 @@ class GeoRaster {
                 data: this._data,
                 rasterType: this.rasterType,
                 sourceType: this.sourceType,
+                readOnDemand: this.readOnDemand,
                 metadata: this._metadata,
               }, [this._data]);
             } else {
@@ -144,20 +150,22 @@ class GeoRaster {
                 data: this._data,
                 rasterType: this.rasterType,
                 sourceType: this.sourceType,
+                readOnDemand: this.readOnDemand,
                 metadata: this._metadata,
               });
             }
           } else {
-            if (debug) console.log('web worker is not available');
+            if (debug && ! this._web_worker_is_available) console.log('web worker is not available');
             parseData({
               data: this._data,
               rasterType: this.rasterType,
               sourceType: this.sourceType,
+              readOnDemand: this.readOnDemand,
               metadata: this._metadata,
             }, debug).then(result => {
               if (debug) console.log('result:', result);
-              if (this._url) {
-                result._geotiff = geotiff;
+              if (this.readOnDemand) {
+                if (this._url) result._geotiff = geotiff;
                 result.getValues = function(options) {
                   return getValues(this._geotiff, options);
                 };
