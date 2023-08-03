@@ -1,0 +1,34 @@
+diff --git a/node_modules/geotiff/src/geotiffimage.js b/node_modules/geotiff/src/geotiffimage.js
+index da20f8a..288e79f 100644
+--- a/node_modules/geotiff/src/geotiffimage.js
++++ b/node_modules/geotiff/src/geotiffimage.js
+@@ -314,15 +314,18 @@ class GeoTIFFImage {
+ 
+     for (let yTile = minYTile; yTile < maxYTile; ++yTile) {
+       for (let xTile = minXTile; xTile < maxXTile; ++xTile) {
++        let getPromise;
++        if (this.planarConfiguration === 1) {
++          getPromise = this.getTileOrStrip(xTile, yTile, 0, poolOrDecoder);
++        }
+         for (let sampleIndex = 0; sampleIndex < samples.length; ++sampleIndex) {
+           const si = sampleIndex;
+           const sample = samples[sampleIndex];
+           if (this.planarConfiguration === 2) {
+             bytesPerPixel = this.getSampleByteSize(sample);
++            getPromise = this.getTileOrStrip(xTile, yTile, sample, poolOrDecoder)
+           }
+-          const promise = this.getTileOrStrip(xTile, yTile, sample, poolOrDecoder);
+-          promises.push(promise);
+-          promise.then((tile) => {
++          const promise = getPromise.then((tile) => {
+             const buffer = tile.data;
+             const dataView = new DataView(buffer);
+             const firstLine = tile.y * tileHeight;
+@@ -355,6 +358,7 @@ class GeoTIFFImage {
+               }
+             }
+           });
++          promises.push(promise);
+         }
+       }
+     }
