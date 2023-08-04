@@ -41,12 +41,13 @@ function getValues(geotiff, options) {
 
 
 class GeoRaster {
-  constructor(data, metadata, debug) {
+  constructor(data, metadata, debug, options = {}) {
     if (debug) console.log('starting GeoRaster.constructor with', data, metadata);
 
     this._web_worker_is_available = typeof window !== 'undefined' && window.Worker !== 'undefined';
     this._blob_is_available = typeof Blob !== 'undefined';
     this._url_is_available = typeof URL !== 'undefined';
+    this._options = options
 
     // check if should convert to buffer
     if (typeof data === 'object' && data.constructor && data.constructor.name === 'Buffer' && Buffer.isBuffer(data) === false) {
@@ -92,10 +93,13 @@ class GeoRaster {
       const ovrURL = this._url + '.ovr';
       return urlExists(ovrURL).then(ovrExists => {
         if (debug) console.log('overview exists:', ovrExists);
+        this._options = Object.assign({}, {cache: true, forceXHR: false}, this._options)
+        
+        if (debug) console.log('options:', this._options);
         if (ovrExists) {
-          return fromUrls(this._url, [ovrURL], {cache: true, forceXHR: false});
+          return fromUrls(this._url, [ovrURL], this._options);
         } else {
-          return fromUrl(this._url, {cache: true, forceXHR: false});
+          return fromUrl(this._url, this._options);
         }
       });
     } else {
@@ -134,6 +138,7 @@ class GeoRaster {
             if (this._data instanceof ArrayBuffer) {
               worker.postMessage({
                 data: this._data,
+                options: this._options,
                 rasterType: this.rasterType,
                 sourceType: this.sourceType,
                 metadata: this._metadata,
@@ -141,6 +146,7 @@ class GeoRaster {
             } else {
               worker.postMessage({
                 data: this._data,
+                options: this._options,
                 rasterType: this.rasterType,
                 sourceType: this.sourceType,
                 metadata: this._metadata,
@@ -150,6 +156,7 @@ class GeoRaster {
             if (debug) console.log('web worker is not available');
             parseData({
               data: this._data,
+              options: this._options,
               rasterType: this.rasterType,
               sourceType: this.sourceType,
               metadata: this._metadata,
@@ -175,7 +182,7 @@ class GeoRaster {
   }
 }
 
-const parseGeoraster = (input, metadata, debug) => {
+const parseGeoraster = (input, metadata, debug, options = {}) => {
   if (debug) console.log('starting parseGeoraster with ', input, metadata);
 
   if (input === undefined) {
@@ -183,7 +190,7 @@ const parseGeoraster = (input, metadata, debug) => {
     throw Error(errorMessage);
   }
 
-  return new GeoRaster(input, metadata, debug).initialize(debug);
+  return new GeoRaster(input, metadata, debug, options).initialize(debug);
 };
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {

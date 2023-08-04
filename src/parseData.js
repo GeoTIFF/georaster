@@ -70,16 +70,17 @@ export default function parseData(data, debug) {
         resolve(processResult(result));
       } else if (data.rasterType === 'geotiff') {
         result._data = data.data;
-
+        let initArgs = [data.data]
         let initFunction = fromArrayBuffer;
         if (data.sourceType === 'url') {
           initFunction = fromUrl;
+          initArgs.push(data.options)
         } else if (data.sourceType === 'Blob') {
           initFunction = fromBlob;
         }
 
         if (debug) console.log('data.rasterType is geotiff');
-        resolve(initFunction(data.data).then(geotiff => {
+        resolve(initFunction(...initArgs).then(geotiff => {
           if (debug) console.log('geotiff:', geotiff);
           return geotiff.getImage().then(image => {
             try {
