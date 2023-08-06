@@ -99,12 +99,13 @@ test('should parse data/rgb_raster.tif', async ({ eq }) => {
     eq(secondary_georaster.height, expected_height);
 });
 
-test('should parse data/rgb_paletted.tif', async ({ eq }) => {
-    const data = fs.readFileSync('data/rgb_paletted.tif');
-    const georaster = await parseGeoraster(data);
-    eq(Array.isArray(georaster.palette), true);
-    eq(georaster.palette.length, 256);
-});
+// Disabled: File Does Not Exist in Repo
+// test('should parse data/rgb_paletted.tif', async ({ eq }) => {
+//     const data = fs.readFileSync('data/rgb_paletted.tif');
+//     const georaster = await parseGeoraster(data);
+//     eq(Array.isArray(georaster.palette), true);
+//     eq(georaster.palette.length, 256);
+// });
 
 test('min/max calculations', async ({ eq }) => {
     const parsed = await parseGeoraster([ [ [3, -3] ], [ [2, -2] ], [ [1, -1] ] ], {});
@@ -164,4 +165,86 @@ test('min/max calculations', async ({ eq }) => {
 //         });
 //     });
 //   });
+
+test('Parsing COG Raster', async({ eq })  => {
+    const raster_url = "https://storage.googleapis.com/cfo-public/vegetation/California-Vegetation-CanopyBaseHeight-2016-Summer-00010m.tif";
+    parseGeoraster(raster_url, null, true).then(georaster => {
+        try {
+            eq(georaster.numberOfRasters, 1);
+            eq(georaster.projection, 32610);
+            eq(georaster.height, 103969);
+            eq(georaster.width, 94338);
+            eq(georaster.pixelHeight, 10);
+            eq(georaster.pixelWidth, 10);
+            eq(georaster.xmin, 374310);
+            eq(georaster.xmax, 1317690);
+            eq(georaster.ymin, 3613890);
+            eq(georaster.ymax, 4653580);
+            eq(georaster.noDataValue, -9999);
+
+            const options = {
+                left: 0,
+                top: 0,
+                right: 4000,
+                bottom: 4000,
+                width: 10,
+                height: 10
+            };
+            georaster.getValues(options).then(values => {
+                console.log("values:", values);
+                console.log("Object.keys(values):", Object.keys(values));
+
+                const numBands = values.length;
+                const numRows = values[0].length;
+                const numColumns = values[0][0].length;
+                eq(numBands, 1);
+                eq(numRows, 10);
+                eq(numColumns, 10);
+
+                // checking histogram for first and only band
+                const histogram = countIn2D(values[0]);
+                console.log("hist:", histogram);
+                eq(histogram[0], 11);
+                eq(histogram[-7999], 1);
+            });
+        } catch (error) {
+            console.error('error:', error);
+        }
+    });
+});
+
+// Enable if you want to test private authentication against the Maxar Discovery API
+// test('Parsing Private COG Raster', async({ eq }) => {
+//     const raster_url = "https://api.maxar.com/discovery/v1/collections/wv01/items/10200100D33E5000/assets/collections/dg-archive/assets/browse/10200100D33E5000.browse.tif";
+//     let requestOps = {
+//     headers: {
+//         Authorization: `Bearer ${process.env.API_TOKEN}`
+//     },
+//     redirect: 'follow',
+//     forceHTTP: true
+//     }
+//     parseGeoraster(raster_url, null, true, requestOps).then(georaster => {
+//         eq(georaster.numberOfRasters, 1);
+//         eq(georaster.projection, 4326);
+//         eq(georaster.noDataValue, null);
+
+//         const options = {
+//             left: 0,
+//             top: 0,
+//             right: 4000,
+//             bottom: 4000,
+//             width: 10,
+//             height: 10
+//         };
+//         georaster.getValues(options).then(values => {
+//             const numBands = values.length;
+//             const numRows = values[0].length;
+//             const numColumns = values[0][0].length;
+//             eq(numBands, 1);
+//             eq(numRows, 10);
+//             eq(numColumns, 10);
+//             const histogram = countIn2D(values[0]);
+//             eq(histogram[0], 71);
+//         });
+//     });
 // });
