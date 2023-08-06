@@ -95,7 +95,6 @@ class GeoRaster {
       return urlExists(ovrURL).then(ovrExists => {
         if (debug) console.log('overview exists:', ovrExists);
         this._options = Object.assign({}, {cache: true, forceXHR: false}, this._options)
-        
         if (debug) console.log('options:', this._options);
         if (ovrExists) {
           return fromUrls(this._url, [ovrURL], this._options);

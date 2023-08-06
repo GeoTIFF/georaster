@@ -213,37 +213,38 @@ test('Parsing COG Raster', async({ eq })  => {
     });
 });
 
-test('Parsing Private COG Raster', async({ eq }) => {
-    const raster_url = "https://api.maxar.com/discovery/v1/collections/wv01/items/10200100D33E5000/assets/collections/dg-archive/assets/browse/10200100D33E5000.browse.tif";
-    let requestOps = {
-    headers: {
-        Authorization: `Bearer ${process.env.API_TOKEN}`
-    },
-    redirect: 'follow',
-    forceHTTP: true
-    }
-    parseGeoraster(raster_url, null, true, requestOps).then(georaster => {
-        eq(georaster.numberOfRasters, 1);
-        eq(georaster.projection, 4326);
-        eq(georaster.noDataValue, null);
+// Enable if you want to test private authentication against the Maxar Discovery API
+// test('Parsing Private COG Raster', async({ eq }) => {
+//     const raster_url = "https://api.maxar.com/discovery/v1/collections/wv01/items/10200100D33E5000/assets/collections/dg-archive/assets/browse/10200100D33E5000.browse.tif";
+//     let requestOps = {
+//     headers: {
+//         Authorization: `Bearer ${process.env.API_TOKEN}`
+//     },
+//     redirect: 'follow',
+//     forceHTTP: true
+//     }
+//     parseGeoraster(raster_url, null, true, requestOps).then(georaster => {
+//         eq(georaster.numberOfRasters, 1);
+//         eq(georaster.projection, 4326);
+//         eq(georaster.noDataValue, null);
 
-        const options = {
-            left: 0,
-            top: 0,
-            right: 4000,
-            bottom: 4000,
-            width: 10,
-            height: 10
-        };
-        georaster.getValues(options).then(values => {
-            const numBands = values.length;
-            const numRows = values[0].length;
-            const numColumns = values[0][0].length;
-            eq(numBands, 1);
-            eq(numRows, 10);
-            eq(numColumns, 10);
-            const histogram = countIn2D(values[0]);
-            eq(histogram[0], 71);
-        });
-    });
-});
+//         const options = {
+//             left: 0,
+//             top: 0,
+//             right: 4000,
+//             bottom: 4000,
+//             width: 10,
+//             height: 10
+//         };
+//         georaster.getValues(options).then(values => {
+//             const numBands = values.length;
+//             const numRows = values[0].length;
+//             const numColumns = values[0][0].length;
+//             eq(numBands, 1);
+//             eq(numRows, 10);
+//             eq(numColumns, 10);
+//             const histogram = countIn2D(values[0]);
+//             eq(histogram[0], 71);
+//         });
+//     });
+// });

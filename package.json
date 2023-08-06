@@ -48,7 +48,6 @@
   "dependencies": {
     "calc-image-stats": "^0.9.0",
     "cross-fetch": "^3.0.4",
-    "follow-redirects": "^1.15.2",
     "georaster-to-canvas": "0.2.0",
     "geotiff": "1.0.0-beta.13",
     "geotiff-palette": "0.0.0",
