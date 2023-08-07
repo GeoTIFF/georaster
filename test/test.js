@@ -35,8 +35,22 @@ test('should parse data/GeogToWGS84GeoKey5.tif', async ({ eq }) => {
     const georaster = await parseGeoraster(data);
     eq(georaster.numberOfRasters, 1);
     eq(georaster.projection, 32767);
+    eq(georaster.readOnDemand, false);
     eq(georaster.values[0].length, georaster.height);
     eq(georaster.values[0][0].length, georaster.width);
+
+    const truncdata = data.subarray(0,data.length/2);
+    const truncerr = await parseGeoraster(truncdata)
+        .then(() => 'no error')
+        .catch(error => error.toString());
+    eq(truncerr, 'RangeError: Offset is outside the bounds of the DataView');
+
+    const ondemand = await parseGeoraster(data, { readOnDemand: true });
+    eq(ondemand.readOnDemand, true);
+    eq(ondemand.values, undefined);
+    eq(ondemand.projection, 32767);
+    eq(ondemand.height, georaster.height);
+    eq(ondemand.width, georaster.width);
 });
 
 test('if you pass in undefined, should throw an error', ({ eq }) => {
@@ -181,6 +195,8 @@ test('Parsing COG Raster', async({ eq })  => {
             eq(georaster.ymin, 3613890);
             eq(georaster.ymax, 4653580);
             eq(georaster.noDataValue, -9999);
+            eq(georaster.readOnDemand, true);
+            eq(georaster.values, undefined);
 
             const options = {
                 left: 0,
