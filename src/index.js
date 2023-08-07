@@ -147,7 +147,12 @@ class GeoRaster {
             const worker = new Worker();
             worker.onmessage = (e) => {
               if (debug) console.log('main thread received message:', e);
-              parseDataDone(e.data);
+              if (e.data.error) reject(e.data.error);
+              else parseDataDone(e.data);
+            };
+            worker.onerror = (e) => {
+              if (debug) console.log('main thread received error:', e);
+              reject(e);
             };
             if (debug) console.log('about to postMessage');
             if (this._data instanceof ArrayBuffer) {
