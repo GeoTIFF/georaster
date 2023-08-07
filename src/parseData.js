@@ -50,11 +50,11 @@ export default function parseData(data, debug) {
         resolve(processResult(result));
       } else if (data.rasterType === 'geotiff') {
         result._data = data.data;
-        let initArgs = [data.data]
+        const initArgs = [data.data];
         let initFunction = fromArrayBuffer;
         if (data.sourceType === 'url') {
           initFunction = fromUrl;
-          initArgs.push(data.options)
+          initArgs.push(data.options);
         } else if (data.sourceType === 'Blob') {
           initFunction = fromBlob;
         }
@@ -99,7 +99,7 @@ export default function parseData(data, debug) {
                 result.palette = getPalette(image);
               }
 
-              if (! data.readOnDemand) {
+              if (!data.readOnDemand) {
                 return image.readRasters().then(rasters => {
                   result.values = rasters.map(valuesInOneDimension => {
                     return unflatten(valuesInOneDimension, {height, width});
