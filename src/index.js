@@ -47,7 +47,7 @@ class GeoRaster {
     this._web_worker_is_available = typeof window !== 'undefined' && typeof window.Worker !== 'undefined';
     this._blob_is_available = typeof Blob !== 'undefined';
     this._url_is_available = typeof URL !== 'undefined';
-    this._options = options
+    this._options = options;
 
     // check if should convert to buffer
     if (typeof data === 'object' && data.constructor && data.constructor.name === 'Buffer' && Buffer.isBuffer(data) === false) {
@@ -99,7 +99,7 @@ class GeoRaster {
       const ovrURL = this._url + '.ovr';
       return urlExists(ovrURL).then(ovrExists => {
         if (debug) console.log('overview exists:', ovrExists);
-        this._options = Object.assign({}, {cache: true, forceXHR: false}, this._options)
+        this._options = Object.assign({}, {cache: true, forceXHR: false}, this._options);
         if (debug) console.log('options:', this._options);
         if (ovrExists) {
           return fromUrls(this._url, [ovrURL], this._options);
@@ -122,12 +122,13 @@ class GeoRaster {
         if (this.rasterType === 'object' || this.rasterType === 'geotiff' || this.rasterType === 'tiff') {
           const parseDataArgs = {
             data: this._data,
+            options: this._options,
             rasterType: this.rasterType,
             sourceType: this.sourceType,
             readOnDemand: this.readOnDemand,
             metadata: this._metadata,
           };
-          if (this._web_worker_is_available && ! this.readOnDemand) {
+          if (this._web_worker_is_available && !this.readOnDemand) {
             const worker = new Worker();
             worker.onmessage = (e) => {
               if (debug) console.log('main thread received message:', e);
@@ -148,31 +149,13 @@ class GeoRaster {
             };
             if (debug) console.log('about to postMessage');
             if (this._data instanceof ArrayBuffer) {
-              worker.postMessage({
-                data: this._data,
-                options: this._options,
-                rasterType: this.rasterType,
-                sourceType: this.sourceType,
-                metadata: this._metadata,
-              }, [this._data]);
+              worker.postMessage(parseDataArgs, [this._data]);
             } else {
-              worker.postMessage({
-                data: this._data,
-                options: this._options,
-                rasterType: this.rasterType,
-                sourceType: this.sourceType,
-                metadata: this._metadata,
-              });
+              worker.postMessage(parseDataArgs);
             }
           } else {
             if (debug) console.log('web worker is not available');
-            parseData({
-              data: this._data,
-              options: this._options,
-              rasterType: this.rasterType,
-              sourceType: this.sourceType,
-              metadata: this._metadata,
-            }, debug).then(result => {
+            parseData(parseDataArgs, debug).then(result => {
               if (debug) console.log('result:', result);
               if (this.readOnDemand) {
                 if (this._url) result._geotiff = geotiff;
