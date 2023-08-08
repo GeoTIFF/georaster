@@ -22,5 +22,8 @@ onmessage = e => {
     }
     postMessage(result, transferBuffers);
     close();
+  }).catch(error => {
+    postMessage({ error });
+    close();
   });
 };

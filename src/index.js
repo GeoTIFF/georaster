@@ -128,24 +128,31 @@ class GeoRaster {
             readOnDemand: this.readOnDemand,
             metadata: this._metadata,
           };
+          const parseDataDone = data => {
+            for (const key in data) {
+              this[key] = data[key];
+            }
+            if (this.readOnDemand) {
+              if (this._url) this._geotiff = geotiff;
+              this.getValues = function(options) {
+                return getValues(this._geotiff, options);
+              };
+            }
+            this.toCanvas = function(options) {
+              return toCanvas(this, options);
+            };
+            resolve(this);
+          };
           if (this._web_worker_is_available && !this.readOnDemand) {
             const worker = new Worker();
             worker.onmessage = (e) => {
               if (debug) console.log('main thread received message:', e);
-              const data = e.data;
-              for (const key in data) {
-                this[key] = data[key];
-              }
-              if (this.readOnDemand) {
-                if (this._url) this._geotiff = geotiff;
-                this.getValues = function(options) {
-                  return getValues(this._geotiff, options);
-                };
-              }
-              this.toCanvas = function(options) {
-                return toCanvas(this, options);
-              };
-              resolve(this);
+              if (e.data.error) reject(e.data.error);
+              else parseDataDone(e.data);
+            };
+            worker.onerror = (e) => {
+              if (debug) console.log('main thread received error:', e);
+              reject(e);
             };
             if (debug) console.log('about to postMessage');
             if (this._data instanceof ArrayBuffer) {
@@ -154,19 +161,10 @@ class GeoRaster {
               worker.postMessage(parseDataArgs);
             }
           } else {
-            if (debug) console.log('web worker is not available');
+            if (debug && !this._web_worker_is_available) console.log('web worker is not available');
             parseData(parseDataArgs, debug).then(result => {
               if (debug) console.log('result:', result);
-              if (this.readOnDemand) {
-                if (this._url) result._geotiff = geotiff;
-                result.getValues = function(options) {
-                  return getValues(this._geotiff, options);
-                };
-              }
-              result.toCanvas = function(options) {
-                return toCanvas(this, options);
-              };
-              resolve(result);
+              parseDataDone(result);
             }).catch(reject);
           }
         } else {
